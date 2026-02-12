@@ -1,0 +1,324 @@
+{
+  "version": "1.0",
+  "updated": "2026-02-12",
+  "descripcion": "Contrato de datos entre Lovable (frontend onboarding) y Supabase",
+
+  "configuracion_supabase": {
+    "url": "process.env.NEXT_PUBLIC_SUPABASE_URL",
+    "anon_key": "process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "nota": "Las credenciales deben estar en variables de entorno del proyecto Lovable"
+  },
+
+  "autenticacion": {
+    "proveedores_oauth": ["google", "apple"],
+    "magic_link_email": true,
+    "flujo": [
+      "1. Usuario hace login con Google/Apple/Email",
+      "2. Supabase crea registro en auth.users automáticamente",
+      "3. Frontend verifica si existe en tabla 'usuarios'",
+      "4. Si no existe, crear con rol 'pagador'"
+    ],
+    "ejemplo_codigo": {
+      "sign_in_google": "await supabase.auth.signInWithOAuth({ provider: 'google' })",
+      "verificar_usuario": "await supabase.from('usuarios').select('*').eq('id', user.id).single()",
+      "crear_usuario": "await supabase.from('usuarios').insert({ id: user.id, rol: 'pagador' })"
+    }
+  },
+
+  "tablas_accesibles": {
+    "empresas_pagadoras": {
+      "permisos": {
+        "SELECT": "Solo su propia empresa (RLS por usuario_id)",
+        "INSERT": "Puede crear 1 empresa asociada a su usuario",
+        "UPDATE": "Solo si estado es 'pendiente' o 'documentos_incompletos'",
+        "DELETE": "No permitido"
+      },
+      "campos_requeridos_insert": {
+        "usuario_id": "UUID - ID del usuario autenticado (auth.uid())",
+        "nit": "string - Formato: 'XXXXXXXXX-X' (ej: '900123456-7')",
+        "razon_social": "string - Nombre completo de la empresa",
+        "direccion": "string - Dirección completa",
+        "ciudad": "string - Ciudad",
+        "departamento": "string - Departamento de Colombia",
+        "actividad_economica": "string - Descripción de la actividad",
+        "codigo_ciiu": "string - Código CIIU (ej: '6201')",
+        "representante_legal_nombre": "string - Nombre completo",
+        "representante_legal_cedula": "string - Número de cédula",
+        "representante_legal_email": "string - Email válido",
+        "representante_legal_telefono": "string - Formato: '+573001234567'"
+      },
+      "campos_auto_completados": {
+        "id": "UUID generado automáticamente",
+        "estado": "Siempre 'pendiente' al crear",
+        "created_at": "Timestamp automático",
+        "updated_at": "Timestamp automático"
+      },
+      "campos_opcionales": {
+        "ip_registro": "string (INET) - IP del cliente",
+        "user_agent": "string - User agent del navegador"
+      },
+      "validaciones_cliente": {
+        "nit": "Regex: /^\\d{9}-\\d{1}$/",
+        "email": "Regex: /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/",
+        "telefono": "Formato: +57 seguido de 10 dígitos"
+      },
+      "ejemplo_insert": {
+        "usuario_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "nit": "900123456-7",
+        "razon_social": "EMPRESA XYZ S.A.S.",
+        "direccion": "Calle 123 # 45-67",
+        "ciudad": "Bogotá",
+        "departamento": "Cundinamarca",
+        "actividad_economica": "Desarrollo de software",
+        "codigo_ciiu": "6201",
+        "representante_legal_nombre": "Juan Pérez",
+        "representante_legal_cedula": "1234567890",
+        "representante_legal_email": "juan@empresa.com",
+        "representante_legal_telefono": "+573001234567",
+        "ip_registro": "192.168.1.1",
+        "user_agent": "Mozilla/5.0..."
+      },
+      "ejemplo_update": {
+        "nota": "Solo permitido si estado es 'pendiente' o 'documentos_incompletos'",
+        "campos_actualizables": ["direccion", "ciudad", "departamento", "representante_legal_telefono"],
+        "codigo": "await supabase.from('empresas_pagadoras').update({ ciudad: 'Medellín' }).eq('usuario_id', user.id).eq('estado', 'pendiente')"
+      }
+    },
+
+    "documentos": {
+      "permisos": {
+        "SELECT": "Documentos de su empresa + campo 'extraccion_completa' visible",
+        "INSERT": "NO DIRECTAMENTE - Usar Edge Function 'generar-url-subida'",
+        "UPDATE": "No permitido desde cliente",
+        "DELETE": "No permitido"
+      },
+      "flujo_subida_documento": {
+        "paso_1": "Llamar Edge Function 'generar-url-subida' con metadata del archivo",
+        "paso_2": "Edge Function retorna presigned URL de S3 + crea registro en tabla documentos",
+        "paso_3": "Frontend hace PUT del archivo a la presigned URL",
+        "paso_4": "Documento queda registrado automáticamente"
+      },
+      "edge_function_generar_url_subida": {
+        "endpoint": "supabase.functions.invoke('generar-url-subida', { body: {...} })",
+        "payload_requerido": {
+          "empresa_id": "UUID - ID de la empresa",
+          "tipo_documento": "string - Uno de: 'camara_comercio', 'registro_accionistas', 'rut', 'cedula_representante_legal', 'declaracion_renta', 'estados_financieros', 'otro'",
+          "nombre_archivo": "string - Nombre original del archivo (ej: 'rut_empresa.pdf')",
+          "mime_type": "string - Tipo MIME (ej: 'application/pdf', 'image/jpeg')",
+          "tamano_bytes": "number - Tamaño del archivo en bytes"
+        },
+        "respuesta_exitosa": {
+          "presigned_url": "https://s3.amazonaws.com/confirming-documentos-prod/...",
+          "s3_bucket": "confirming-documentos-prod",
+          "s3_key": "pagadores/900123456-7/rut/20260212_a3f2b1c4_rut.pdf",
+          "documento_id": "uuid-del-registro-creado"
+        },
+        "ejemplo_completo": {
+          "paso_1_llamar_edge_function": "const { data } = await supabase.functions.invoke('generar-url-subida', { body: { empresa_id, tipo_documento: 'rut', nombre_archivo: file.name, mime_type: file.type, tamano_bytes: file.size } })",
+          "paso_2_subir_a_s3": "await fetch(data.presigned_url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })",
+          "paso_3_confirmar": "console.log('Documento subido con ID:', data.documento_id)"
+        }
+      },
+      "tipos_documento_validos": [
+        "camara_comercio",
+        "registro_accionistas",
+        "rut",
+        "cedula_representante_legal",
+        "declaracion_renta",
+        "estados_financieros",
+        "otro"
+      ],
+      "mime_types_soportados": [
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "image/jpg"
+      ],
+      "tamano_maximo_archivo": "10 MB (10485760 bytes)",
+      "ejemplo_select": {
+        "codigo": "await supabase.from('documentos').select('id, tipo_documento, nombre_original, created_at, extraccion_completa').eq('empresa_id', empresaId).eq('es_version_actual', true).order('created_at', { ascending: false })",
+        "nota": "RLS garantiza que solo vean documentos de su empresa"
+      }
+    },
+
+    "historial_estados": {
+      "permisos": {
+        "SELECT": "Solo historial de su empresa",
+        "INSERT": "No permitido (automático via trigger)",
+        "UPDATE": "No permitido",
+        "DELETE": "No permitido"
+      },
+      "campos_visibles": {
+        "id": "UUID",
+        "estado_anterior": "string",
+        "estado_nuevo": "string",
+        "motivo": "string (puede ser null)",
+        "created_at": "timestamp"
+      },
+      "ejemplo_select": {
+        "codigo": "await supabase.from('historial_estados').select('*').eq('empresa_id', empresaId).order('created_at', { ascending: false })",
+        "nota": "Útil para mostrar timeline de estados al usuario"
+      }
+    },
+
+    "usuarios": {
+      "permisos": {
+        "SELECT": "Solo su propio registro",
+        "INSERT": "Permitido al crear cuenta",
+        "UPDATE": "Solo su propio registro",
+        "DELETE": "No recomendado"
+      },
+      "campos": {
+        "id": "UUID - Debe coincidir con auth.users.id",
+        "rol": "string - Siempre 'pagador' para onboarding",
+        "created_at": "timestamp",
+        "updated_at": "timestamp"
+      }
+    }
+  },
+
+  "realtime_opcional": {
+    "descripcion": "Si quieres que el usuario vea cambios en tiempo real cuando un admin actualiza el estado",
+    "ejemplo_suscripcion": {
+      "codigo": "supabase.channel('cambios-empresa').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'empresas_pagadoras', filter: `id=eq.${empresaId}` }, (payload) => { console.log('Cambio:', payload.new.estado) }).subscribe()"
+    },
+    "nota": "Opcional para Capa 1, útil para mejorar UX"
+  },
+
+  "edge_functions_disponibles": {
+    "generar-url-subida": {
+      "descripcion": "Genera presigned URL para subir documento a S3",
+      "metodo": "POST",
+      "requiere_auth": true,
+      "payload": "Ver sección 'documentos' arriba",
+      "retorna": "{ presigned_url, s3_bucket, s3_key, documento_id }"
+    },
+    "obtener-url-documento": {
+      "descripcion": "NO NECESARIA PARA LOVABLE - Solo para back office",
+      "nota": "Los usuarios del onboarding no necesitan visualizar documentos después de subirlos"
+    }
+  },
+
+  "estados_empresa": {
+    "descripcion": "Estados posibles de una empresa en el proceso de onboarding",
+    "valores": {
+      "pendiente": "Recién creada, esperando revisión",
+      "en_revision": "Admin está revisando documentos",
+      "documentos_incompletos": "Faltan documentos o hay errores",
+      "aprobado": "Onboarding completo, puede operar",
+      "rechazado": "Solicitud rechazada"
+    },
+    "flujo_normal": "pendiente → en_revision → aprobado",
+    "flujo_con_errores": "pendiente → en_revision → documentos_incompletos → en_revision → aprobado"
+  },
+
+  "checklist_implementacion_lovable": [
+    {
+      "paso": 1,
+      "titulo": "Configurar Supabase SDK",
+      "tareas": [
+        "Instalar @supabase/supabase-js",
+        "Configurar variables de entorno NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "Crear cliente Supabase en lib/supabase.ts"
+      ]
+    },
+    {
+      "paso": 2,
+      "titulo": "Implementar autenticación",
+      "tareas": [
+        "Página de login con botones Google/Apple/Email",
+        "Callback OAuth",
+        "Verificar/crear registro en tabla 'usuarios' con rol 'pagador'"
+      ]
+    },
+    {
+      "paso": 3,
+      "titulo": "Formulario de datos empresa",
+      "tareas": [
+        "Validar NIT con regex /^\\d{9}-\\d{1}$/",
+        "Validar email y teléfono",
+        "INSERT en tabla 'empresas_pagadoras'",
+        "Manejar errores (NIT duplicado, etc)"
+      ]
+    },
+    {
+      "paso": 4,
+      "titulo": "Subida de documentos",
+      "tareas": [
+        "Por cada tipo de documento: input file con validación de MIME type",
+        "Llamar Edge Function 'generar-url-subida'",
+        "Hacer PUT a presigned URL con fetch()",
+        "Mostrar progreso de subida",
+        "Confirmar que documento quedó registrado"
+      ]
+    },
+    {
+      "paso": 5,
+      "titulo": "Pantalla de confirmación",
+      "tareas": [
+        "Mostrar mensaje 'Solicitud recibida'",
+        "Listar documentos subidos",
+        "Mostrar estado actual (debería ser 'pendiente')"
+      ]
+    },
+    {
+      "paso": 6,
+      "titulo": "Portal de seguimiento",
+      "tareas": [
+        "SELECT de empresas_pagadoras para obtener estado",
+        "SELECT de historial_estados para mostrar timeline",
+        "Opcional: suscripción realtime para updates automáticos"
+      ]
+    }
+  ],
+
+  "validaciones_importantes": {
+    "nit_colombiano": {
+      "formato": "XXXXXXXXX-X (9 dígitos, guión, 1 dígito verificador)",
+      "regex": "^\\d{9}-\\d{1}$",
+      "ejemplo_valido": "900123456-7",
+      "ejemplo_invalido": "900123456"
+    },
+    "email": {
+      "regex": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    },
+    "telefono_colombia": {
+      "formato": "+57 seguido de 10 dígitos",
+      "regex": "^\\+57\\d{10}$",
+      "ejemplo": "+573001234567"
+    },
+    "tamano_archivos": {
+      "max_bytes": 10485760,
+      "max_legible": "10 MB"
+    }
+  },
+
+  "manejo_errores": {
+    "nit_duplicado": {
+      "codigo_postgres": "23505",
+      "mensaje_usuario": "Ya existe una empresa registrada con este NIT"
+    },
+    "archivo_muy_grande": {
+      "validacion": "file.size > 10485760",
+      "mensaje_usuario": "El archivo supera el tamaño máximo de 10 MB"
+    },
+    "tipo_archivo_invalido": {
+      "validacion": "!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)",
+      "mensaje_usuario": "Solo se permiten archivos PDF, JPG o PNG"
+    },
+    "estado_no_editable": {
+      "validacion": "empresa.estado no está en ['pendiente', 'documentos_incompletos']",
+      "mensaje_usuario": "No puedes editar la empresa en su estado actual"
+    }
+  },
+
+  "notas_finales": [
+    "NUNCA intentes subir archivos directamente a Supabase Storage - usa S3 via presigned URLs",
+    "SIEMPRE valida el formato del NIT antes de enviar el formulario",
+    "RLS garantiza que los usuarios solo vean sus propios datos, confía en él",
+    "No necesitas crear roles manualmente, Supabase Auth maneja eso",
+    "Los documentos NO se pueden eliminar una vez subidos, solo reemplazar",
+    "Si un usuario sube el mismo tipo de documento dos veces, el anterior se marca como es_version_actual=false",
+    "El campo 'extraccion_completa' se actualiza automáticamente cuando Document AI procesa el documento"
+  ]
+}
