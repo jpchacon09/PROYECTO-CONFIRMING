@@ -5,6 +5,7 @@ import { DocumentosList } from '@/components/detalle-empresa/DocumentosList'
 import { ComentariosPanel } from '@/components/detalle-empresa/ComentariosPanel'
 import { HistorialTimeline } from '@/components/detalle-empresa/HistorialTimeline'
 import { AccionesAdmin } from '@/components/detalle-empresa/AccionesAdmin'
+import { SarlaftPanel } from '@/components/detalle-empresa/SarlaftPanel'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -88,12 +89,36 @@ async function getComentarios(empresaId: string): Promise<ComentarioInterno[]> {
   return data || []
 }
 
+async function getSarlaftValidaciones(empresaId: string) {
+  const supabase = await createServerSupabaseClient()
+  try {
+    const { data, error } = await supabase
+      .from('validaciones_sarlaft')
+      .select('id, scope, provider_status, created_at, resultado')
+      .eq('empresa_id', empresaId)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    if (error) {
+      // Si la tabla no existe aun, no bloqueamos la vista.
+      console.error('Error fetching SARLAFT:', error)
+      return []
+    }
+
+    return (data as any[]) ?? []
+  } catch (e) {
+    console.error('Error fetching SARLAFT (exception):', e)
+    return []
+  }
+}
+
 export default async function EmpresaDetallePage({ params }: PageProps) {
-  const [empresa, documentos, historial, comentarios] = await Promise.all([
+  const [empresa, documentos, historial, comentarios, sarlaftValidaciones] = await Promise.all([
     getEmpresa(params.id),
     getDocumentos(params.id),
     getHistorial(params.id),
-    getComentarios(params.id)
+    getComentarios(params.id),
+    getSarlaftValidaciones(params.id)
   ])
 
   if (!empresa) {
@@ -113,6 +138,16 @@ export default async function EmpresaDetallePage({ params }: PageProps) {
 
       {/* Acciones de Admin */}
       <AccionesAdmin empresa={empresa} />
+
+      {/* SARLAFT */}
+      <SarlaftPanel
+        empresaId={empresa.id}
+        nit={empresa.nit}
+        razonSocial={empresa.razon_social}
+        representanteNombre={empresa.representante_legal_nombre}
+        representanteDocumento={empresa.representante_legal_cedula}
+        validaciones={sarlaftValidaciones as any}
+      />
 
       {/* Información de la Empresa */}
       <div className="grid gap-6 md:grid-cols-2">

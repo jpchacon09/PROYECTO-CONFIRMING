@@ -11,6 +11,7 @@
 ### Edge Functions (Supabase)
 - ✅ `generar-url-subida` - Genera presigned URL para subir docs a S3
 - ✅ `obtener-url-documento` - Obtiene presigned URL para ver docs
+- ⏳ `validar-sarlaft` - Proxy server-side a endpoint SARLAFT (evita CORS) + opcional guardado en DB
 
 ### API Routes
 - ✅ `GET /api/health` - Health check
@@ -51,7 +52,7 @@ Si **NO**, necesitas:
 1. Ir a Supabase Dashboard → SQL Editor
 2. Copiar todo el contenido de `schema_supabase.sql`
 3. Ejecutar (Cmd+Enter)
-4. Verificar que se crearon las 9 tablas + triggers
+4. Verificar que se crearon las 10 tablas + triggers
 
 ### 3. **¿Edge Functions desplegadas?**
 

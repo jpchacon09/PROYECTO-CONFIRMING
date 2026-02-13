@@ -149,6 +149,34 @@ CREATE TABLE public.historial_estados (
 
 CREATE INDEX idx_historial_empresa ON public.historial_estados(empresa_id, created_at DESC);
 
+-- validaciones_sarlaft
+-- Guarda validaciones de SARLAFT (CC/CE/NIT) realizadas via endpoint externo (n8n/api/validate)
+CREATE TABLE public.validaciones_sarlaft (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    empresa_id UUID NOT NULL REFERENCES public.empresas_pagadoras(id) ON DELETE CASCADE,
+    usuario_id UUID NOT NULL REFERENCES public.usuarios(id) ON DELETE CASCADE,
+
+    -- Contexto
+    scope VARCHAR(20) NOT NULL DEFAULT 'representante' CHECK (scope IN ('empresa', 'representante')),
+
+    -- Request
+    tipo_documento VARCHAR(10) NOT NULL,
+    documento VARCHAR(32) NOT NULL,
+    nombres TEXT NOT NULL,
+    user_id VARCHAR(100),
+    ip_address INET,
+    force_refresh BOOLEAN DEFAULT FALSE,
+
+    -- Response
+    provider_status INTEGER,
+    resultado JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_sarlaft_empresa ON public.validaciones_sarlaft(empresa_id, created_at DESC);
+CREATE INDEX idx_sarlaft_documento ON public.validaciones_sarlaft(tipo_documento, documento);
+
 -- notificaciones_enviadas
 CREATE TABLE public.notificaciones_enviadas (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -424,6 +452,7 @@ ALTER TABLE public.empresas_pagadoras ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documentos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comentarios_internos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.historial_estados ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.validaciones_sarlaft ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notificaciones_enviadas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.convenios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.proveedores ENABLE ROW LEVEL SECURITY;
@@ -544,6 +573,39 @@ CREATE POLICY "Usuarios ven historial de su empresa"
             SELECT 1 FROM public.empresas_pagadoras
             WHERE id = historial_estados.empresa_id
             AND usuario_id = auth.uid()
+        )
+        OR EXISTS (
+            SELECT 1 FROM public.usuarios
+            WHERE id = auth.uid() AND rol = 'admin'
+        )
+    );
+
+-- Políticas para VALIDACIONES SARLAFT
+CREATE POLICY "Usuarios ven validaciones SARLAFT de su empresa"
+    ON public.validaciones_sarlaft FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.empresas_pagadoras
+            WHERE id = validaciones_sarlaft.empresa_id
+            AND usuario_id = auth.uid()
+        )
+        OR EXISTS (
+            SELECT 1 FROM public.usuarios
+            WHERE id = auth.uid() AND rol = 'admin'
+        )
+    );
+
+-- Inserts de validacion: pagador puede insertar para SU empresa, admin para cualquiera.
+CREATE POLICY "Usuarios pueden insertar validaciones SARLAFT de su empresa"
+    ON public.validaciones_sarlaft FOR INSERT
+    WITH CHECK (
+        (
+            usuario_id = auth.uid()
+            AND EXISTS (
+                SELECT 1 FROM public.empresas_pagadoras ep
+                WHERE ep.id = validaciones_sarlaft.empresa_id
+                AND ep.usuario_id = auth.uid()
+            )
         )
         OR EXISTS (
             SELECT 1 FROM public.usuarios

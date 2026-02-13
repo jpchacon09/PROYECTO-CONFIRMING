@@ -105,7 +105,7 @@ export function DatosEmpresa() {
     try {
       setLoading(true)
 
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from('empresas_pagadoras')
         .insert({
           usuario_id: user.id,
@@ -113,6 +113,8 @@ export function DatosEmpresa() {
           ip_registro: null,
           user_agent: navigator.userAgent,
         })
+        .select('id')
+        .single()
 
       if (error) {
         if (error.code === '23505') {
@@ -121,6 +123,63 @@ export function DatosEmpresa() {
           toast.error('Error al guardar los datos: ' + error.message)
         }
         return
+      }
+
+      // Validacion SARLAFT (server-side via Edge Function para evitar CORS).
+      // No bloqueamos el flujo si falla: solo agrega valor al backoffice y al risk check.
+      const empresaId = inserted?.id
+      if (empresaId) {
+        toast.message('Validando SARLAFT...', {
+          description: 'Esto no detiene el proceso si falla temporalmente.',
+        })
+
+        void (async () => {
+          const checks = [
+            {
+              scope: 'empresa',
+              nombres: values.razon_social,
+              documento: values.nit,
+              tipo_documento: 'NIT',
+            },
+            {
+              scope: 'representante',
+              nombres: values.representante_legal_nombre,
+              documento: values.representante_legal_cedula,
+              tipo_documento: 'CC', // TODO: agregar selector CC/CE en UI si se requiere
+            },
+          ]
+
+          const results = await Promise.allSettled(
+            checks.map((c) =>
+              supabase.functions.invoke('validar-sarlaft', {
+                body: {
+                  empresa_id: empresaId,
+                  ...c,
+                  user_id: 'agentrobust',
+                  ip_address: '',
+                  force_refresh: false,
+                },
+              })
+            )
+          )
+
+          const ok = results.some(
+            (r) =>
+              r.status === 'fulfilled' &&
+              !r.value.error &&
+              (r.value.data as any)?.success === true
+          )
+
+          if (ok) {
+            toast.success('SARLAFT validado', {
+              description: 'Resultado disponible para el equipo en backoffice.',
+            })
+          } else {
+            toast.warning('No se pudo validar SARLAFT ahora', {
+              description: 'Puedes continuar. Se puede reintentar luego desde backoffice.',
+            })
+          }
+        })()
       }
 
       toast.success('Datos guardados correctamente')

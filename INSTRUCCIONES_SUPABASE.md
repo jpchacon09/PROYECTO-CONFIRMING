@@ -37,6 +37,7 @@ Deberías ver estas tablas:
 - historial_estados
 - notificaciones_enviadas
 - proveedores
+- validaciones_sarlaft
 - usuarios
 
 ## Paso 4: Verificar triggers
@@ -87,6 +88,62 @@ SELECT * FROM empresas_pagadoras;
 ```
 
 ## Troubleshooting
+
+## SARLAFT (Validación)
+
+### Crear tabla y policies (si ya ejecutaste el schema antes)
+Si tu proyecto ya tenia el schema aplicado, agrega SARLAFT con:
+
+```sql
+-- Tabla
+create table if not exists public.validaciones_sarlaft (
+  id uuid primary key default uuid_generate_v4(),
+  empresa_id uuid not null references public.empresas_pagadoras(id) on delete cascade,
+  usuario_id uuid not null references public.usuarios(id) on delete cascade,
+  scope varchar(20) not null default 'representante' check (scope in ('empresa','representante')),
+  tipo_documento varchar(10) not null,
+  documento varchar(32) not null,
+  nombres text not null,
+  user_id varchar(100),
+  ip_address inet,
+  force_refresh boolean default false,
+  provider_status integer,
+  resultado jsonb not null default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_sarlaft_empresa on public.validaciones_sarlaft(empresa_id, created_at desc);
+create index if not exists idx_sarlaft_documento on public.validaciones_sarlaft(tipo_documento, documento);
+
+alter table public.validaciones_sarlaft enable row level security;
+
+drop policy if exists "Usuarios ven validaciones SARLAFT de su empresa" on public.validaciones_sarlaft;
+create policy "Usuarios ven validaciones SARLAFT de su empresa"
+on public.validaciones_sarlaft for select
+using (
+  exists (
+    select 1 from public.empresas_pagadoras
+    where id = validaciones_sarlaft.empresa_id
+    and usuario_id = auth.uid()
+  )
+  or exists (select 1 from public.usuarios where id = auth.uid() and rol = 'admin')
+);
+
+drop policy if exists "Usuarios pueden insertar validaciones SARLAFT de su empresa" on public.validaciones_sarlaft;
+create policy "Usuarios pueden insertar validaciones SARLAFT de su empresa"
+on public.validaciones_sarlaft for insert
+with check (
+  (
+    usuario_id = auth.uid()
+    and exists (
+      select 1 from public.empresas_pagadoras ep
+      where ep.id = validaciones_sarlaft.empresa_id
+      and ep.usuario_id = auth.uid()
+    )
+  )
+  or exists (select 1 from public.usuarios where id = auth.uid() and rol = 'admin')
+);
+```
 
 ### Error en backoffice al aprobar/rechazar (500): "new row violates row-level security policy for table historial_estados"
 Esto pasa si ejecutaste una version del schema sin policies de INSERT para tablas que reciben inserts desde triggers.

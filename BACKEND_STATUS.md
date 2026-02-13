@@ -7,7 +7,7 @@
 ## ✅ COMPLETADO
 
 ### 1. Base de Datos (Supabase)
-- ✅ Schema ejecutado correctamente (9 tablas)
+- ✅ Schema ejecutado correctamente (10 tablas)
 - ✅ Triggers configurados (historial, notificaciones)
 - ✅ Row Level Security (RLS) activo
 - ✅ Funciones SQL creadas
@@ -17,6 +17,7 @@
 ### 2. Edge Functions (Supabase)
 - ✅ `generar-url-subida` desplegada
 - ✅ `obtener-url-documento` desplegada
+- ⏳ `validar-sarlaft` (nuevo) - Proxy server-side a endpoint SARLAFT via n8n + guardado en DB (si tabla existe)
 - ✅ Secrets de AWS configurados
 
 **URL:** https://supabase.com/dashboard/project/admmzddhtrvgzbbhkiqf/functions
@@ -25,6 +26,7 @@
 ```
 POST https://admmzddhtrvgzbbhkiqf.supabase.co/functions/v1/generar-url-subida
 POST https://admmzddhtrvgzbbhkiqf.supabase.co/functions/v1/obtener-url-documento
+POST https://admmzddhtrvgzbbhkiqf.supabase.co/functions/v1/validar-sarlaft
 ```
 
 Notas (2026-02-13):
