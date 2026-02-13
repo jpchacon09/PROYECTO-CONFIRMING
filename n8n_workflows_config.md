@@ -67,7 +67,7 @@ n8n se conectará a Supabase para leer notificaciones pendientes y ejecutar acci
       - Ciudad: {{ $json.ciudad }}
       - Documentos subidos: {{ $json.total_documentos }}
 
-      Revisar en: https://backoffice.tudominio.com/dashboard/empresas/{{ $json.empresa_id }}
+      Revisar en: https://backoffice-confirming-741488896424.us-central1.run.app/dashboard/empresas/{{ $json.empresa_id }}
       ```
 
    ↓
@@ -389,7 +389,7 @@ EQUIPO_EMAIL=equipo@confirming.com
 EQUIPO_WHATSAPP=+573001234567
 
 # URLs
-BACKOFFICE_URL=https://backoffice.tudominio.com
+BACKOFFICE_URL=https://backoffice-confirming-741488896424.us-central1.run.app
 APP_URL=https://app.tudominio.com
 ```
 

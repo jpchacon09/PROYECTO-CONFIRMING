@@ -1,0 +1,16 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_SUPABASE_URL=https://admmzddhtrvgzbbhkiqf.supabase.co'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkbW16ZGRodHJ2Z3piYmhraXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NDg4OTMsImV4cCI6MjA4NjUyNDg5M30.64LlPgYSVLBTKLZ6P3bi-tPFrlNUrK061eBJldPQMa4'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_APP_URL=https://backoffice-confirming-741488896424.us-central1.run.app'
+      - '-t'
+      - 'gcr.io/platam-analytics/backoffice-confirming:latest'
+      - '.'
+images:
+  - 'gcr.io/platam-analytics/backoffice-confirming:latest'
+timeout: '1200s'

@@ -4,6 +4,11 @@ Fecha de actualización: 2026-02-13
 
 Este documento es la referencia de operación para evitar bloqueos en frontend.
 
+## URLs de producción
+
+- **Cliente (onboarding):** https://confirming-onboarding.web.app (Firebase Hosting)
+- **Backoffice (admin):** https://backoffice-confirming-741488896424.us-central1.run.app (Cloud Run, proyecto GCP `platam-analytics`)
+
 ## Alcance
 
 - `cliente/`: portal de onboarding para empresas pagadoras (React + Vite).
@@ -45,8 +50,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 En Supabase Auth, agregar estas URLs permitidas:
 
-- `http://localhost:5173/auth/callback` (cliente)
-- `http://localhost:3000/auth/callback` (backoffice)
+- `http://localhost:5173/auth/callback` (cliente local)
+- `http://localhost:3000/auth/callback` (backoffice local)
+- `https://confirming-onboarding.web.app/auth/callback` (cliente producción)
+- `https://backoffice-confirming-741488896424.us-central1.run.app/login` (backoffice producción)
 
 Sin estas URLs, OAuth/Magic Link no redirige correctamente.
 
@@ -159,6 +166,31 @@ Checklist frontend después de este cambio:
 3. Confirmar que ya no aparece `502` en consola.
 4. Confirmar que el documento aparece en la lista con estado subido.
 5. Si falla, capturar `sb-request-id` del request a la function para traza rápida en logs.
+
+## Despliegue a producción
+
+### Cliente (Firebase Hosting)
+
+```bash
+cd cliente
+npm run build
+firebase deploy --only hosting --project confirming-onboarding
+```
+
+### Backoffice (Cloud Run)
+
+```bash
+cd backoffice
+gcloud builds submit --config=cloudbuild.yaml --project=platam-analytics
+gcloud run deploy backoffice-confirming \
+  --image=gcr.io/platam-analytics/backoffice-confirming:latest \
+  --platform=managed --region=us-central1 \
+  --project=platam-analytics
+```
+
+Variables de entorno del runtime (ya configuradas en Cloud Run): `SUPABASE_SERVICE_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET`, `AWS_S3_PREFIX`.
+
+Variables `NEXT_PUBLIC_*` se pasan como build args en `cloudbuild.yaml` (se embeben en el bundle de Next.js).
 
 ## Seguridad
 
