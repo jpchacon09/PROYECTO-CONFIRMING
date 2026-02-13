@@ -95,6 +95,27 @@ SELECT * FROM empresas_pagadoras;
 Si tu proyecto ya tenia el schema aplicado, agrega SARLAFT con:
 
 ```sql
+-- Agregar tipo de documento del representante legal (CC/CE)
+alter table public.empresas_pagadoras
+add column if not exists representante_legal_tipo_documento varchar(2);
+
+update public.empresas_pagadoras
+set representante_legal_tipo_documento = 'CC'
+where representante_legal_tipo_documento is null;
+
+alter table public.empresas_pagadoras
+alter column representante_legal_tipo_documento set default 'CC';
+
+alter table public.empresas_pagadoras
+alter column representante_legal_tipo_documento set not null;
+
+alter table public.empresas_pagadoras
+drop constraint if exists empresas_pagadoras_representante_legal_tipo_documento_check;
+
+alter table public.empresas_pagadoras
+add constraint empresas_pagadoras_representante_legal_tipo_documento_check
+check (representante_legal_tipo_documento in ('CC','CE'));
+
 -- Tabla
 create table if not exists public.validaciones_sarlaft (
   id uuid primary key default uuid_generate_v4(),

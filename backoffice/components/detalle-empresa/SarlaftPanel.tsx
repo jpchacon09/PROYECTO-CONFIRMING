@@ -29,6 +29,7 @@ export function SarlaftPanel(props: {
   nit: string
   razonSocial: string
   representanteNombre: string
+  representanteTipoDocumento?: string | null
   representanteDocumento: string
   validaciones: SarlaftRecord[]
 }) {
@@ -37,6 +38,9 @@ export function SarlaftPanel(props: {
 
   const lastEmpresa = props.validaciones.find((v) => v.scope === 'empresa') ?? null
   const lastRep = props.validaciones.find((v) => v.scope === 'representante') ?? null
+
+  const nitBase = (props.nit || '').replace(/\D/g, '').slice(0, 9)
+  const repTipo = (props.representanteTipoDocumento || 'CC').toUpperCase() === 'CE' ? 'CE' : 'CC'
 
   const runCheck = async (scope: 'empresa' | 'representante', force_refresh: boolean) => {
     try {
@@ -48,7 +52,7 @@ export function SarlaftPanel(props: {
               empresa_id: props.empresaId,
               scope: 'empresa',
               nombres: props.razonSocial,
-              documento: props.nit,
+              documento: nitBase,
               tipo_documento: 'NIT',
               user_id: 'agentrobust',
               ip_address: '',
@@ -59,7 +63,7 @@ export function SarlaftPanel(props: {
               scope: 'representante',
               nombres: props.representanteNombre,
               documento: props.representanteDocumento,
-              tipo_documento: 'CC', // TODO: agregar selector CC/CE si se requiere
+              tipo_documento: repTipo,
               user_id: 'agentrobust',
               ip_address: '',
               force_refresh,
@@ -141,4 +145,3 @@ export function SarlaftPanel(props: {
     </Card>
   )
 }
-

@@ -39,6 +39,7 @@ CREATE TABLE public.empresas_pagadoras (
 
     -- Representante legal
     representante_legal_nombre VARCHAR(255) NOT NULL,
+    representante_legal_tipo_documento VARCHAR(2) NOT NULL DEFAULT 'CC' CHECK (representante_legal_tipo_documento IN ('CC', 'CE')),
     representante_legal_cedula VARCHAR(15) NOT NULL,
     representante_legal_email VARCHAR(255) NOT NULL,
     representante_legal_telefono VARCHAR(20) NOT NULL,

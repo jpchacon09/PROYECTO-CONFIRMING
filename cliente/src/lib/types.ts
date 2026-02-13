@@ -35,6 +35,7 @@ export interface EmpresaPagadora {
 
   // Representante legal
   representante_legal_nombre: string
+  representante_legal_tipo_documento: 'CC' | 'CE'
   representante_legal_cedula: string
   representante_legal_email: string
   representante_legal_telefono: string
@@ -101,6 +102,7 @@ export interface DatosEmpresaForm {
   actividad_economica: string
   codigo_ciiu: string
   representante_legal_nombre: string
+  representante_legal_tipo_documento: 'CC' | 'CE'
   representante_legal_cedula: string
   representante_legal_email: string
   representante_legal_telefono: string

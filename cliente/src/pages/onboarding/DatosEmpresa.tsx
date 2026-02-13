@@ -18,10 +18,29 @@ import { TypeformProgress } from '@/components/typeform/TypeformProgress'
 import { TypeformNavigation } from '@/components/typeform/TypeformNavigation'
 import { useTypeformNavigation } from '@/hooks/useTypeformNavigation'
 
+function computeNitDv(nitBase: string): number {
+  // Colombian NIT check digit (DV). For 9 digits, factors are:
+  // 41, 37, 29, 23, 19, 17, 13, 7, 3 (left to right).
+  const digits = nitBase.replace(/\D/g, '')
+  if (digits.length !== 9) return NaN
+  const factors = [41, 37, 29, 23, 19, 17, 13, 7, 3]
+  let sum = 0
+  for (let i = 0; i < 9; i += 1) sum += Number(digits[i]) * factors[i]
+  const mod = sum % 11
+  return mod > 1 ? 11 - mod : mod
+}
+
+function formatNitWithDv(nitBase: string): string {
+  const digits = nitBase.replace(/\D/g, '')
+  const dv = computeNitDv(digits)
+  if (!Number.isFinite(dv)) return digits
+  return `${digits}-${dv}`
+}
+
 // Schema de validación
 const empresaSchema = z.object({
-  nit: z.string().regex(/^\d{9}-\d{1}$/, {
-    message: 'El NIT debe tener el formato XXXXXXXXX-X (ej: 900123456-7)',
+  nit: z.string().regex(/^\d{9}$/, {
+    message: 'El NIT debe tener 9 dígitos (sin dígito de verificación)',
   }),
   razon_social: z.string().min(3, 'La razón social es requerida'),
   direccion: z.string().min(5, 'La dirección es requerida'),
@@ -32,6 +51,7 @@ const empresaSchema = z.object({
     message: 'El código CIIU debe tener 4 dígitos',
   }),
   representante_legal_nombre: z.string().min(3, 'El nombre del representante legal es requerido'),
+  representante_legal_tipo_documento: z.enum(['CC', 'CE']),
   representante_legal_cedula: z.string().regex(/^\d{5,15}$/, {
     message: 'La cédula debe tener entre 5 y 15 dígitos',
   }),
@@ -52,7 +72,7 @@ const STEPS: StepConfig[] = [
   { fields: ['departamento', 'ciudad'] },
   { fields: ['actividad_economica', 'codigo_ciiu'] },
   { fields: ['representante_legal_nombre'] },
-  { fields: ['representante_legal_cedula'] },
+  { fields: ['representante_legal_tipo_documento', 'representante_legal_cedula'] },
   { fields: ['representante_legal_email'] },
   { fields: ['representante_legal_telefono'] },
 ]
@@ -78,13 +98,18 @@ export function DatosEmpresa() {
     register,
     handleSubmit,
     trigger,
+    watch,
     formState: { errors },
   } = useForm<EmpresaFormData>({
     resolver: zodResolver(empresaSchema),
     defaultValues: {
       representante_legal_telefono: '+57',
+      representante_legal_tipo_documento: 'CC',
     },
   })
+
+  const nitBaseValue = watch('nit')
+  const nitFullPreview = nitBaseValue ? formatNitWithDv(nitBaseValue) : ''
 
   const {
     currentStep,
@@ -105,11 +130,14 @@ export function DatosEmpresa() {
     try {
       setLoading(true)
 
+      const nitFull = formatNitWithDv(values.nit)
+
       const { data: inserted, error } = await supabase
         .from('empresas_pagadoras')
         .insert({
           usuario_id: user.id,
           ...values,
+          nit: nitFull,
           ip_registro: null,
           user_agent: navigator.userAgent,
         })
@@ -138,14 +166,14 @@ export function DatosEmpresa() {
             {
               scope: 'empresa',
               nombres: values.razon_social,
-              documento: values.nit,
+              documento: values.nit, // NIT sin DV
               tipo_documento: 'NIT',
             },
             {
               scope: 'representante',
               nombres: values.representante_legal_nombre,
               documento: values.representante_legal_cedula,
-              tipo_documento: 'CC', // TODO: agregar selector CC/CE en UI si se requiere
+              tipo_documento: values.representante_legal_tipo_documento,
             },
           ]
 
@@ -205,12 +233,14 @@ export function DatosEmpresa() {
               <Input
                 variant="typeform"
                 id="nit"
-                placeholder="900123456-7"
+                placeholder="900123456"
                 {...register('nit')}
                 autoFocus
               />
               {errors.nit && <p className="typeform-error">{errors.nit.message}</p>}
-              <p className="typeform-hint">Formato: XXXXXXXXX-X</p>
+              <p className="typeform-hint">
+                9 dígitos sin DV. DV calculado automáticamente: <strong>{nitFullPreview || '...'}</strong>
+              </p>
             </TypeformStep>
           )}
 
@@ -347,19 +377,39 @@ export function DatosEmpresa() {
 
           {currentStep === 6 && (
             <TypeformStep key="rep_cedula" stepNumber={7} totalSteps={totalSteps}>
-              <Label variant="typeform" htmlFor="representante_legal_cedula">
-                ¿Cuál es la cédula del representante legal?
+              <Label variant="typeform">
+                Documento del representante legal
               </Label>
-              <Input
-                variant="typeform"
-                id="representante_legal_cedula"
-                placeholder="1234567890"
-                {...register('representante_legal_cedula')}
-                autoFocus
-              />
-              {errors.representante_legal_cedula && (
-                <p className="typeform-error">{errors.representante_legal_cedula.message}</p>
-              )}
+              <div className="space-y-6 mt-2">
+                <div>
+                  <span className="typeform-sublabel">Tipo</span>
+                  <Select
+                    variant="typeform"
+                    id="representante_legal_tipo_documento"
+                    {...register('representante_legal_tipo_documento')}
+                    autoFocus
+                  >
+                    <option value="CC">CC</option>
+                    <option value="CE">CE</option>
+                  </Select>
+                  {errors.representante_legal_tipo_documento && (
+                    <p className="typeform-error">{errors.representante_legal_tipo_documento.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <span className="typeform-sublabel">Número</span>
+                  <Input
+                    variant="typeform"
+                    id="representante_legal_cedula"
+                    placeholder="1234567890"
+                    {...register('representante_legal_cedula')}
+                  />
+                  {errors.representante_legal_cedula && (
+                    <p className="typeform-error">{errors.representante_legal_cedula.message}</p>
+                  )}
+                </div>
+              </div>
             </TypeformStep>
           )}
 

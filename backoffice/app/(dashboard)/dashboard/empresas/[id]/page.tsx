@@ -145,6 +145,7 @@ export default async function EmpresaDetallePage({ params }: PageProps) {
         nit={empresa.nit}
         razonSocial={empresa.razon_social}
         representanteNombre={empresa.representante_legal_nombre}
+        representanteTipoDocumento={(empresa as any).representante_legal_tipo_documento ?? 'CC'}
         representanteDocumento={empresa.representante_legal_cedula}
         validaciones={sarlaftValidaciones as any}
       />
