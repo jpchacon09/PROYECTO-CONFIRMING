@@ -1,0 +1,14 @@
+# Secrets
+Credenciales.txt
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Dependencies
+**/node_modules/
+
+# Tooling/temp
+supabase/.temp/
+
+# OS/editor
+.DS_Store

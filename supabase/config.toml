@@ -1,0 +1,18 @@
+# ============================================================================
+# Supabase Edge Functions - Configuración
+# ============================================================================
+
+[functions.generar-url-subida]
+verify_jwt = true
+
+[functions.obtener-url-documento]
+verify_jwt = true
+
+# Variables de entorno (configurar en Supabase Dashboard)
+# ============================================================================
+# SUPABASE_URL - URL del proyecto Supabase
+# SUPABASE_ANON_KEY - Anon key pública
+# SUPABASE_SERVICE_ROLE_KEY - Service role key (SECRETO)
+# AWS_ACCESS_KEY_ID - Access key de IAM user para S3
+# AWS_SECRET_ACCESS_KEY - Secret access key (SECRETO)
+# ============================================================================

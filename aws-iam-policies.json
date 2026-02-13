@@ -1,0 +1,248 @@
+{
+  "version": "1.0",
+  "description": "Políticas de IAM para Plataforma Confirming",
+  "policies": {
+    "ConfirmingS3PresignedURLPolicy": {
+      "description": "Política para generar presigned URLs (adjuntar a rol de Edge Functions)",
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "AllowPresignedURLGeneration",
+          "Effect": "Allow",
+          "Action": [
+            "s3:GetObject",
+            "s3:PutObject",
+            "s3:PutObjectAcl"
+          ],
+          "Resource": [
+            "arn:aws:s3:::confirming-documentos-prod/*"
+          ]
+        },
+        {
+          "Sid": "AllowListBucket",
+          "Effect": "Allow",
+          "Action": [
+            "s3:ListBucket"
+          ],
+          "Resource": [
+            "arn:aws:s3:::confirming-documentos-prod"
+          ]
+        }
+      ]
+    },
+
+    "ConfirmingDocumentAIPolicy": {
+      "description": "Política para Lambda que procesa Document AI",
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "AllowReadS3",
+          "Effect": "Allow",
+          "Action": [
+            "s3:GetObject"
+          ],
+          "Resource": [
+            "arn:aws:s3:::confirming-documentos-prod/*"
+          ]
+        },
+        {
+          "Sid": "AllowCloudWatchLogs",
+          "Effect": "Allow",
+          "Action": [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource": [
+            "arn:aws:logs:*:*:*"
+          ]
+        }
+      ]
+    },
+
+    "ConfirmingLambdaExecutionPolicy": {
+      "description": "Política base para Lambdas (combinar con otras según necesidad)",
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "AllowBasicLambdaExecution",
+          "Effect": "Allow",
+          "Action": [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource": "*"
+        },
+        {
+          "Sid": "AllowVPCAccess",
+          "Effect": "Allow",
+          "Action": [
+            "ec2:CreateNetworkInterface",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DeleteNetworkInterface"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  },
+
+  "roles": {
+    "ConfirmingEdgeFunctionRole": {
+      "description": "Rol para Supabase Edge Functions",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "ManagedPolicyArns": [
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      ],
+      "InlinePolicies": [
+        "ConfirmingS3PresignedURLPolicy"
+      ]
+    },
+
+    "ConfirmingDocumentAIRole": {
+      "description": "Rol para Lambda de Document AI",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "ManagedPolicyArns": [
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      ],
+      "InlinePolicies": [
+        "ConfirmingDocumentAIPolicy"
+      ]
+    }
+  },
+
+  "users": {
+    "confirming-ci-user": {
+      "description": "Usuario para CI/CD (GitHub Actions, etc)",
+      "Policies": [
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowLambdaDeploy",
+              "Effect": "Allow",
+              "Action": [
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:PublishVersion"
+              ],
+              "Resource": [
+                "arn:aws:lambda:us-east-1:*:function:document-ai-processor"
+              ]
+            },
+            {
+              "Sid": "AllowS3Deploy",
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+              ],
+              "Resource": [
+                "arn:aws:s3:::confirming-ci-artifacts/*"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+
+  "access_keys": {
+    "note": "Las access keys para Supabase Edge Functions se deben crear manualmente y guardar en Supabase Secrets",
+    "required_for": [
+      "Edge Function: generar-url-subida",
+      "Edge Function: obtener-url-documento"
+    ],
+    "rotation_policy": "Rotar cada 90 días",
+    "storage": "AWS Secrets Manager o Supabase Vault"
+  },
+
+  "instructions": {
+    "1_create_policies": {
+      "description": "Crear políticas en AWS IAM Console",
+      "steps": [
+        "1. Ve a AWS Console → IAM → Policies",
+        "2. Click 'Create Policy'",
+        "3. Tab 'JSON' y pega el contenido de 'ConfirmingS3PresignedURLPolicy'",
+        "4. Nombrar: 'ConfirmingS3PresignedURLPolicy'",
+        "5. Repetir para 'ConfirmingDocumentAIPolicy'"
+      ]
+    },
+
+    "2_create_roles": {
+      "description": "Crear roles en AWS IAM Console",
+      "steps": [
+        "1. Ve a AWS Console → IAM → Roles",
+        "2. Click 'Create Role'",
+        "3. Trusted entity type: AWS Service",
+        "4. Use case: Lambda",
+        "5. Adjuntar políticas:",
+        "   - AWSLambdaBasicExecutionRole (managed)",
+        "   - ConfirmingS3PresignedURLPolicy (custom)",
+        "6. Nombrar: 'ConfirmingEdgeFunctionRole'",
+        "7. Repetir para 'ConfirmingDocumentAIRole'"
+      ]
+    },
+
+    "3_create_access_keys": {
+      "description": "Crear access keys para Edge Functions",
+      "steps": [
+        "1. Ve a AWS Console → IAM → Users",
+        "2. Click 'Create User'",
+        "3. Nombrar: 'confirming-edge-functions'",
+        "4. Adjuntar política: 'ConfirmingS3PresignedURLPolicy'",
+        "5. Security credentials → 'Create access key'",
+        "6. Use case: Application running outside AWS",
+        "7. COPIAR Y GUARDAR:",
+        "   - Access Key ID",
+        "   - Secret Access Key",
+        "8. Guardar en Supabase Dashboard → Project Settings → Secrets:",
+        "   - AWS_ACCESS_KEY_ID",
+        "   - AWS_SECRET_ACCESS_KEY"
+      ]
+    },
+
+    "4_verify_setup": {
+      "description": "Verificar configuración",
+      "tests": [
+        {
+          "test": "Test presigned URL generation",
+          "command": "aws s3 presign s3://confirming-documentos-prod/test.txt --expires-in 900",
+          "expected": "URL con firma válida por 15 minutos"
+        },
+        {
+          "test": "Test upload con presigned URL",
+          "steps": [
+            "1. Generar presigned URL de PUT",
+            "2. Ejecutar: curl -X PUT --upload-file test.pdf '<presigned-url>'",
+            "3. Verificar: aws s3 ls s3://confirming-documentos-prod/test.pdf"
+          ]
+        }
+      ]
+    }
+  }
+}
