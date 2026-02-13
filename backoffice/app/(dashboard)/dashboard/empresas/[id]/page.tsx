@@ -105,7 +105,7 @@ async function getSarlaftValidaciones(empresaId: string) {
       return []
     }
 
-    return (data as any[]) ?? []
+    return (data as Array<Record<string, unknown>>) ?? []
   } catch (e) {
     console.error('Error fetching SARLAFT (exception):', e)
     return []
@@ -145,9 +145,9 @@ export default async function EmpresaDetallePage({ params }: PageProps) {
         nit={empresa.nit}
         razonSocial={empresa.razon_social}
         representanteNombre={empresa.representante_legal_nombre}
-        representanteTipoDocumento={(empresa as any).representante_legal_tipo_documento ?? 'CC'}
+        representanteTipoDocumento={(empresa as Record<string, unknown>).representante_legal_tipo_documento as string ?? 'CC'}
         representanteDocumento={empresa.representante_legal_cedula}
-        validaciones={sarlaftValidaciones as any}
+        validaciones={sarlaftValidaciones as Array<{ id: string; scope: string; provider_status: number | null; created_at: string; resultado: unknown }>}
       />
 
       {/* Información de la Empresa */}
