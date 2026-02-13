@@ -337,11 +337,18 @@ serve(async (req) => {
       return errorResponse('CONFIG_ERROR', 'Faltan variables de entorno de AWS en la función')
     }
 
+    const bucket = (documentoData.s3_bucket ?? '').trim()
+    const key = (documentoData.s3_key ?? '').trim()
+    if (!bucket || !key) {
+      // Si `key` queda vacío, el presign apunta al root del bucket y S3 responde con ListBucket/AccessDenied.
+      return errorResponse('DOCUMENTO_STORAGE_INVALID', 'Documento sin ruta S3 válida (s3_bucket/s3_key)')
+    }
+
     let presignedUrl: string
     try {
       presignedUrl = await createPresignedS3GetUrl(
-        documentoData.s3_bucket,
-        documentoData.s3_key,
+        bucket,
+        key,
         S3_REGION,
         awsAccessKeyId,
         awsSecretAccessKey,

@@ -132,7 +132,11 @@ cat > /tmp/cors-config.json <<EOF
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
-        "https://tudominio.com"
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "https://confirming-onboarding.web.app",
+        "https://confirming-onboarding.firebaseapp.com",
+        "https://backoffice-confirming-741488896424.us-central1.run.app"
       ],
       "ExposeHeaders": ["ETag", "x-amz-request-id", "x-amz-id-2"],
       "MaxAgeSeconds": 3000
