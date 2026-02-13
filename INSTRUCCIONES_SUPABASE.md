@@ -88,6 +88,37 @@ SELECT * FROM empresas_pagadoras;
 
 ## Troubleshooting
 
+### Error en backoffice al aprobar/rechazar (500): "new row violates row-level security policy for table historial_estados"
+Esto pasa si ejecutaste una version del schema sin policies de INSERT para tablas que reciben inserts desde triggers.
+
+Ejecuta en Supabase SQL Editor:
+
+```sql
+-- Postgres no soporta CREATE POLICY IF NOT EXISTS, usamos DROP + CREATE.
+
+drop policy if exists "Admins pueden insertar historial" on public.historial_estados;
+create policy "Admins pueden insertar historial"
+on public.historial_estados for insert
+with check (
+  exists (select 1 from public.usuarios where id = auth.uid() and rol = 'admin')
+);
+
+drop policy if exists "Admins pueden insertar notificaciones" on public.notificaciones_enviadas;
+create policy "Admins pueden insertar notificaciones"
+on public.notificaciones_enviadas for insert
+with check (
+  exists (select 1 from public.usuarios where id = auth.uid() and rol = 'admin')
+  or (
+    notificaciones_enviadas.empresa_id is not null
+    and exists (
+      select 1 from public.empresas_pagadoras ep
+      where ep.id = notificaciones_enviadas.empresa_id
+      and ep.usuario_id = auth.uid()
+    )
+  )
+);
+```
+
 ### Error: "extension uuid-ossp does not exist"
 Supabase ya tiene esta extensión habilitada por defecto. Si ves este error, ignóralo.
 

@@ -4,16 +4,19 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import type { User } from '@supabase/supabase-js'
+import { AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { DEPARTAMENTOS_COLOMBIA } from '@/constants/estados'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/errors'
+import { TypeformStep } from '@/components/typeform/TypeformStep'
+import { TypeformProgress } from '@/components/typeform/TypeformProgress'
+import { TypeformNavigation } from '@/components/typeform/TypeformNavigation'
+import { useTypeformNavigation } from '@/hooks/useTypeformNavigation'
 
 // Schema de validación
 const empresaSchema = z.object({
@@ -40,6 +43,20 @@ const empresaSchema = z.object({
 
 type EmpresaFormData = z.infer<typeof empresaSchema>
 
+type StepConfig = { fields: (keyof EmpresaFormData)[] }
+
+const STEPS: StepConfig[] = [
+  { fields: ['nit'] },
+  { fields: ['razon_social'] },
+  { fields: ['direccion'] },
+  { fields: ['departamento', 'ciudad'] },
+  { fields: ['actividad_economica', 'codigo_ciiu'] },
+  { fields: ['representante_legal_nombre'] },
+  { fields: ['representante_legal_cedula'] },
+  { fields: ['representante_legal_email'] },
+  { fields: ['representante_legal_telefono'] },
+]
+
 export function DatosEmpresa() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -60,6 +77,7 @@ export function DatosEmpresa() {
   const {
     register,
     handleSubmit,
+    trigger,
     formState: { errors },
   } = useForm<EmpresaFormData>({
     resolver: zodResolver(empresaSchema),
@@ -67,6 +85,15 @@ export function DatosEmpresa() {
       representante_legal_telefono: '+57',
     },
   })
+
+  const {
+    currentStep,
+    goToNext,
+    goToPrev,
+    isFirstStep,
+    isLastStep,
+    totalSteps,
+  } = useTypeformNavigation(STEPS, trigger)
 
   const onSubmit = async (values: EmpresaFormData) => {
     if (!user) {
@@ -83,7 +110,7 @@ export function DatosEmpresa() {
         .insert({
           usuario_id: user.id,
           ...values,
-          ip_registro: null, // Obtener del navegador si es necesario
+          ip_registro: null,
           user_agent: navigator.userAgent,
         })
 
@@ -106,64 +133,78 @@ export function DatosEmpresa() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Datos de tu empresa</h1>
-          <p className="text-gray-600 mt-2">Paso 1 de 2 - Información básica</p>
-          <div className="mt-4 h-2 bg-gray-200 rounded-full">
-            <div className="h-2 bg-primary rounded-full w-1/2" />
-          </div>
-        </div>
+    <div className="min-h-screen bg-background">
+      <TypeformProgress current={currentStep + 1} total={totalSteps} />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Datos de la Empresa</CardTitle>
-              <CardDescription>Información legal y fiscal</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="nit">NIT *</Label>
-                <Input
-                  id="nit"
-                  placeholder="900123456-7"
-                  {...register('nit')}
-                  className={errors.nit ? 'border-red-500' : ''}
-                />
-                {errors.nit && <p className="text-sm text-red-500 mt-1">{errors.nit.message}</p>}
-              </div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <AnimatePresence mode="wait">
+          {currentStep === 0 && (
+            <TypeformStep key="nit" stepNumber={1} totalSteps={totalSteps}>
+              <Label variant="typeform" htmlFor="nit">
+                ¿Cuál es el NIT de tu empresa?
+              </Label>
+              <Input
+                variant="typeform"
+                id="nit"
+                placeholder="900123456-7"
+                {...register('nit')}
+                autoFocus
+              />
+              {errors.nit && <p className="typeform-error">{errors.nit.message}</p>}
+              <p className="typeform-hint">Formato: XXXXXXXXX-X</p>
+            </TypeformStep>
+          )}
 
-              <div>
-                <Label htmlFor="razon_social">Razón Social *</Label>
-                <Input
-                  id="razon_social"
-                  placeholder="EMPRESA XYZ S.A.S."
-                  {...register('razon_social')}
-                  className={errors.razon_social ? 'border-red-500' : ''}
-                />
-                {errors.razon_social && <p className="text-sm text-red-500 mt-1">{errors.razon_social.message}</p>}
-              </div>
+          {currentStep === 1 && (
+            <TypeformStep key="razon_social" stepNumber={2} totalSteps={totalSteps}>
+              <Label variant="typeform" htmlFor="razon_social">
+                ¿Cuál es la razón social?
+              </Label>
+              <Input
+                variant="typeform"
+                id="razon_social"
+                placeholder="EMPRESA XYZ S.A.S."
+                {...register('razon_social')}
+                autoFocus
+              />
+              {errors.razon_social && (
+                <p className="typeform-error">{errors.razon_social.message}</p>
+              )}
+            </TypeformStep>
+          )}
 
-              <div>
-                <Label htmlFor="direccion">Dirección *</Label>
-                <Textarea
-                  id="direccion"
-                  placeholder="Calle 123 # 45-67"
-                  {...register('direccion')}
-                  className={errors.direccion ? 'border-red-500' : ''}
-                  rows={2}
-                />
-                {errors.direccion && <p className="text-sm text-red-500 mt-1">{errors.direccion.message}</p>}
-              </div>
+          {currentStep === 2 && (
+            <TypeformStep key="direccion" stepNumber={3} totalSteps={totalSteps}>
+              <Label variant="typeform" htmlFor="direccion">
+                ¿Cuál es la dirección de la empresa?
+              </Label>
+              <Textarea
+                variant="typeform"
+                id="direccion"
+                placeholder="Calle 123 # 45-67"
+                {...register('direccion')}
+                rows={2}
+                autoFocus
+              />
+              {errors.direccion && (
+                <p className="typeform-error">{errors.direccion.message}</p>
+              )}
+            </TypeformStep>
+          )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {currentStep === 3 && (
+            <TypeformStep key="ubicacion" stepNumber={4} totalSteps={totalSteps}>
+              <Label variant="typeform">
+                ¿Dónde está ubicada tu empresa?
+              </Label>
+              <div className="space-y-6 mt-2">
                 <div>
-                  <Label htmlFor="departamento">Departamento *</Label>
+                  <span className="typeform-sublabel">Departamento</span>
                   <Select
+                    variant="typeform"
                     id="departamento"
                     {...register('departamento')}
-                    className={errors.departamento ? 'border-red-500' : ''}
+                    autoFocus
                   >
                     <option value="">Selecciona un departamento</option>
                     {DEPARTAMENTOS_COLOMBIA.map((dep) => (
@@ -172,108 +213,147 @@ export function DatosEmpresa() {
                       </option>
                     ))}
                   </Select>
-                  {errors.departamento && <p className="text-sm text-red-500 mt-1">{errors.departamento.message}</p>}
+                  {errors.departamento && (
+                    <p className="typeform-error">{errors.departamento.message}</p>
+                  )}
                 </div>
-
                 <div>
-                  <Label htmlFor="ciudad">Ciudad *</Label>
+                  <span className="typeform-sublabel">Ciudad</span>
                   <Input
+                    variant="typeform"
                     id="ciudad"
                     placeholder="Bogotá"
                     {...register('ciudad')}
-                    className={errors.ciudad ? 'border-red-500' : ''}
                   />
-                  {errors.ciudad && <p className="text-sm text-red-500 mt-1">{errors.ciudad.message}</p>}
+                  {errors.ciudad && (
+                    <p className="typeform-error">{errors.ciudad.message}</p>
+                  )}
                 </div>
               </div>
+            </TypeformStep>
+          )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {currentStep === 4 && (
+            <TypeformStep key="actividad" stepNumber={5} totalSteps={totalSteps}>
+              <Label variant="typeform">
+                ¿A qué se dedica tu empresa?
+              </Label>
+              <div className="space-y-6 mt-2">
                 <div>
-                  <Label htmlFor="actividad_economica">Actividad Económica *</Label>
+                  <span className="typeform-sublabel">Actividad Económica</span>
                   <Input
+                    variant="typeform"
                     id="actividad_economica"
                     placeholder="Desarrollo de software"
                     {...register('actividad_economica')}
-                    className={errors.actividad_economica ? 'border-red-500' : ''}
+                    autoFocus
                   />
-                  {errors.actividad_economica && <p className="text-sm text-red-500 mt-1">{errors.actividad_economica.message}</p>}
+                  {errors.actividad_economica && (
+                    <p className="typeform-error">{errors.actividad_economica.message}</p>
+                  )}
                 </div>
-
                 <div>
-                  <Label htmlFor="codigo_ciiu">Código CIIU *</Label>
+                  <span className="typeform-sublabel">Código CIIU</span>
                   <Input
+                    variant="typeform"
                     id="codigo_ciiu"
                     placeholder="6201"
                     {...register('codigo_ciiu')}
-                    className={errors.codigo_ciiu ? 'border-red-500' : ''}
                   />
-                  {errors.codigo_ciiu && <p className="text-sm text-red-500 mt-1">{errors.codigo_ciiu.message}</p>}
+                  {errors.codigo_ciiu && (
+                    <p className="typeform-error">{errors.codigo_ciiu.message}</p>
+                  )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </TypeformStep>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Representante Legal</CardTitle>
-              <CardDescription>Información del representante legal de la empresa</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="representante_legal_nombre">Nombre Completo *</Label>
-                <Input
-                  id="representante_legal_nombre"
-                  placeholder="Juan Pérez García"
-                  {...register('representante_legal_nombre')}
-                  className={errors.representante_legal_nombre ? 'border-red-500' : ''}
-                />
-                {errors.representante_legal_nombre && <p className="text-sm text-red-500 mt-1">{errors.representante_legal_nombre.message}</p>}
-              </div>
+          {currentStep === 5 && (
+            <TypeformStep key="rep_nombre" stepNumber={6} totalSteps={totalSteps}>
+              <Label variant="typeform" htmlFor="representante_legal_nombre">
+                ¿Cómo se llama el representante legal?
+              </Label>
+              <Input
+                variant="typeform"
+                id="representante_legal_nombre"
+                placeholder="Juan Pérez García"
+                {...register('representante_legal_nombre')}
+                autoFocus
+              />
+              {errors.representante_legal_nombre && (
+                <p className="typeform-error">{errors.representante_legal_nombre.message}</p>
+              )}
+            </TypeformStep>
+          )}
 
-              <div>
-                <Label htmlFor="representante_legal_cedula">Número de Cédula *</Label>
-                <Input
-                  id="representante_legal_cedula"
-                  placeholder="1234567890"
-                  {...register('representante_legal_cedula')}
-                  className={errors.representante_legal_cedula ? 'border-red-500' : ''}
-                />
-                {errors.representante_legal_cedula && <p className="text-sm text-red-500 mt-1">{errors.representante_legal_cedula.message}</p>}
-              </div>
+          {currentStep === 6 && (
+            <TypeformStep key="rep_cedula" stepNumber={7} totalSteps={totalSteps}>
+              <Label variant="typeform" htmlFor="representante_legal_cedula">
+                ¿Cuál es la cédula del representante legal?
+              </Label>
+              <Input
+                variant="typeform"
+                id="representante_legal_cedula"
+                placeholder="1234567890"
+                {...register('representante_legal_cedula')}
+                autoFocus
+              />
+              {errors.representante_legal_cedula && (
+                <p className="typeform-error">{errors.representante_legal_cedula.message}</p>
+              )}
+            </TypeformStep>
+          )}
 
-              <div>
-                <Label htmlFor="representante_legal_email">Email *</Label>
-                <Input
-                  id="representante_legal_email"
-                  type="email"
-                  placeholder="juan@empresa.com"
-                  {...register('representante_legal_email')}
-                  className={errors.representante_legal_email ? 'border-red-500' : ''}
-                />
-                {errors.representante_legal_email && <p className="text-sm text-red-500 mt-1">{errors.representante_legal_email.message}</p>}
-              </div>
+          {currentStep === 7 && (
+            <TypeformStep key="rep_email" stepNumber={8} totalSteps={totalSteps}>
+              <Label variant="typeform" htmlFor="representante_legal_email">
+                ¿Cuál es el email del representante legal?
+              </Label>
+              <Input
+                variant="typeform"
+                id="representante_legal_email"
+                type="email"
+                placeholder="juan@empresa.com"
+                {...register('representante_legal_email')}
+                autoFocus
+              />
+              {errors.representante_legal_email && (
+                <p className="typeform-error">{errors.representante_legal_email.message}</p>
+              )}
+            </TypeformStep>
+          )}
 
-              <div>
-                <Label htmlFor="representante_legal_telefono">Teléfono *</Label>
-                <Input
-                  id="representante_legal_telefono"
-                  type="tel"
-                  placeholder="+573001234567"
-                  {...register('representante_legal_telefono')}
-                  className={errors.representante_legal_telefono ? 'border-red-500' : ''}
-                />
-                {errors.representante_legal_telefono && <p className="text-sm text-red-500 mt-1">{errors.representante_legal_telefono.message}</p>}
-              </div>
-            </CardContent>
-          </Card>
+          {currentStep === 8 && (
+            <TypeformStep key="rep_telefono" stepNumber={9} totalSteps={totalSteps}>
+              <Label variant="typeform" htmlFor="representante_legal_telefono">
+                ¿Cuál es el teléfono del representante legal?
+              </Label>
+              <Input
+                variant="typeform"
+                id="representante_legal_telefono"
+                type="tel"
+                placeholder="+573001234567"
+                {...register('representante_legal_telefono')}
+                autoFocus
+              />
+              {errors.representante_legal_telefono && (
+                <p className="typeform-error">{errors.representante_legal_telefono.message}</p>
+              )}
+              <p className="typeform-hint">Formato: +57XXXXXXXXXX</p>
+            </TypeformStep>
+          )}
+        </AnimatePresence>
 
-          <div className="flex gap-4">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Guardando...' : 'Guardar y continuar'}
-            </Button>
-          </div>
-        </form>
-      </div>
+        <TypeformNavigation
+          onPrev={goToPrev}
+          onNext={() => void goToNext()}
+          canGoPrev={!isFirstStep}
+          canGoNext={!isLastStep}
+          showSubmit={isLastStep}
+          submitLabel={loading ? 'Guardando...' : 'Guardar y continuar'}
+          loading={loading}
+        />
+      </form>
     </div>
   )
 }

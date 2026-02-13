@@ -32,10 +32,10 @@ export function Sidebar() {
   }
 
   return (
-    <div className="flex h-full w-64 flex-col bg-gray-900">
+    <div className="flex h-full w-64 flex-col bg-card border-r border-border">
       {/* Logo */}
-      <div className="flex h-16 items-center justify-center border-b border-gray-800 px-4">
-        <h1 className="text-xl font-bold text-white">Confirming Platam</h1>
+      <div className="flex h-16 items-center justify-center border-b border-border px-4">
+        <h1 className="text-xl font-bold text-primary">Confirming Platam</h1>
       </div>
 
       {/* Navigation */}
@@ -49,14 +49,14 @@ export function Sidebar() {
               className={cn(
                 'group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
             >
               <item.icon
                 className={cn(
                   'mr-3 h-5 w-5 flex-shrink-0',
-                  isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                  isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
                 )}
               />
               {item.name}
@@ -66,12 +66,12 @@ export function Sidebar() {
       </nav>
 
       {/* User section */}
-      <div className="border-t border-gray-800 p-4">
+      <div className="border-t border-border p-4">
         <button
           onClick={handleLogout}
-          className="group flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+          className="group flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-white" />
+          <LogOut className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-foreground" />
           Cerrar sesión
         </button>
       </div>

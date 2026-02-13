@@ -105,8 +105,8 @@ export default async function EmpresaDetallePage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{empresa.razon_social}</h1>
-          <p className="text-gray-500">NIT: {empresa.nit}</p>
+          <h1 className="text-3xl font-bold text-foreground">{empresa.razon_social}</h1>
+          <p className="text-muted-foreground">NIT: {empresa.nit}</p>
         </div>
         <EmpresaEstadoBadge estado={empresa.estado} className="text-lg px-4 py-2" />
       </div>
@@ -125,32 +125,32 @@ export default async function EmpresaDetallePage({ params }: PageProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-500">Razón Social</label>
-              <p className="text-gray-900">{empresa.razon_social}</p>
+              <label className="text-sm font-medium text-muted-foreground">Razón Social</label>
+              <p className="text-foreground">{empresa.razon_social}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">NIT</label>
-              <p className="text-gray-900">{empresa.nit}</p>
+              <label className="text-sm font-medium text-muted-foreground">NIT</label>
+              <p className="text-foreground">{empresa.nit}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">
+              <label className="text-sm font-medium text-muted-foreground">
                 <MapPin className="inline h-4 w-4 mr-1" />
                 Dirección
               </label>
-              <p className="text-gray-900">{empresa.direccion}</p>
-              <p className="text-gray-600 text-sm">{empresa.ciudad}, {empresa.departamento}</p>
+              <p className="text-foreground">{empresa.direccion}</p>
+              <p className="text-muted-foreground text-sm">{empresa.ciudad}, {empresa.departamento}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Actividad Económica</label>
-              <p className="text-gray-900">{empresa.actividad_economica}</p>
-              <p className="text-gray-600 text-sm">CIIU: {empresa.codigo_ciiu}</p>
+              <label className="text-sm font-medium text-muted-foreground">Actividad Económica</label>
+              <p className="text-foreground">{empresa.actividad_economica}</p>
+              <p className="text-muted-foreground text-sm">CIIU: {empresa.codigo_ciiu}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">
+              <label className="text-sm font-medium text-muted-foreground">
                 <Calendar className="inline h-4 w-4 mr-1" />
                 Fecha de Registro
               </label>
-              <p className="text-gray-900">
+              <p className="text-foreground">
                 {format(new Date(empresa.created_at), "dd 'de' MMMM 'de' yyyy", { locale: es })}
               </p>
             </div>
@@ -166,26 +166,26 @@ export default async function EmpresaDetallePage({ params }: PageProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-500">Nombre</label>
-              <p className="text-gray-900">{empresa.representante_legal_nombre}</p>
+              <label className="text-sm font-medium text-muted-foreground">Nombre</label>
+              <p className="text-foreground">{empresa.representante_legal_nombre}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Cédula</label>
-              <p className="text-gray-900">{empresa.representante_legal_cedula}</p>
+              <label className="text-sm font-medium text-muted-foreground">Cédula</label>
+              <p className="text-foreground">{empresa.representante_legal_cedula}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">
+              <label className="text-sm font-medium text-muted-foreground">
                 <Mail className="inline h-4 w-4 mr-1" />
                 Email
               </label>
-              <p className="text-gray-900">{empresa.representante_legal_email}</p>
+              <p className="text-foreground">{empresa.representante_legal_email}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">
+              <label className="text-sm font-medium text-muted-foreground">
                 <Phone className="inline h-4 w-4 mr-1" />
                 Teléfono
               </label>
-              <p className="text-gray-900">{empresa.representante_legal_telefono}</p>
+              <p className="text-foreground">{empresa.representante_legal_telefono}</p>
             </div>
           </CardContent>
         </Card>

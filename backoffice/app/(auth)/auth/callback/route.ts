@@ -23,12 +23,14 @@ export async function GET(request: Request) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 7 días
+        path: '/',
       })
       cookieStore.set('sb-refresh-token', data.session.refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 30, // 30 días
+        path: '/',
       })
 
       // Verificar que el usuario exista en la tabla usuarios y sea admin

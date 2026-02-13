@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { ApiResponse, Usuario, EmpresaPagadora, UpdateEmpresaPagadora } from '@/lib/types'
 
@@ -21,8 +20,13 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const headerAuth = req.headers.get('authorization')
+    const headerToken = headerAuth?.toLowerCase().startsWith('bearer ')
+      ? headerAuth.slice(7).trim()
+      : null
+
     // Verificar autenticación
-    const supabase = await createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient({ accessToken: headerToken })
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
@@ -67,7 +71,8 @@ export async function PATCH(
     // Parsear body
     const body = (await req.json()) as { nuevo_estado?: string; motivo?: string }
     const nuevo_estado = body.nuevo_estado
-    const motivo = body.motivo
+    // `motivo` se guarda via trigger si lo implementamos en el futuro; por ahora no lo persistimos en DB
+    // para evitar depender de policies de INSERT en historial_estados.
 
     // Validar estado
     if (!nuevo_estado || !isEstadoValido(nuevo_estado)) {
@@ -80,14 +85,15 @@ export async function PATCH(
       }, { status: 400 })
     }
 
-    // Obtener empresa actual
-    const { data: empresaData, error: empresaError } = await supabaseAdmin
+    // Obtener empresa actual (con token del admin; RLS permite SELECT a admins)
+    const { data: empresaData, error: empresaError } = await supabase
       .from('empresas_pagadoras')
       .select('*')
       .eq('id', params.id)
       .single()
 
     if (empresaError || !empresaData) {
+      if (empresaError) console.error('Error al buscar empresa:', empresaError)
       return NextResponse.json<ApiResponse<null>>({
         success: false,
         error: {
@@ -112,8 +118,8 @@ export async function PATCH(
       updateData.fecha_aprobacion = new Date().toISOString()
     }
 
-    // Actualizar estado usando Supabase Admin (bypass RLS)
-    const { error: updateError } = await supabaseAdmin
+    // Actualizar estado (RLS permite UPDATE a admins). El trigger en DB registra historial automaticamente.
+    const { error: updateError } = await supabase
       .from('empresas_pagadoras')
       .update(updateData)
       .eq('id', params.id)
@@ -130,18 +136,6 @@ export async function PATCH(
         }
       }, { status: 500 })
     }
-
-    // El trigger de Supabase debería crear el registro en historial_estados automáticamente
-    // Pero si no existe, lo creamos manualmente
-    await supabaseAdmin
-      .from('historial_estados')
-      .insert({
-        empresa_id: params.id,
-        estado_anterior: empresa.estado,
-        estado_nuevo: nuevo_estado,
-        cambiado_por: user.id,
-        motivo: motivo || null
-      })
 
     return NextResponse.json<ApiResponse<{
       empresa_id: string

@@ -62,12 +62,12 @@ export function DocumentViewer({ documento, onClose }: DocumentViewerProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
+      <div className="bg-card rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col border border-border">
         {/* Header */}
-        <div className="flex items-center justify-between border-b p-4">
+        <div className="flex items-center justify-between border-b border-border p-4">
           <div>
-            <h3 className="font-semibold text-lg">{documento.nombre_original}</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="font-semibold text-lg text-foreground">{documento.nombre_original}</h3>
+            <p className="text-sm text-muted-foreground">
               {(documento.tamano_bytes / 1024).toFixed(0)} KB
             </p>
           </div>
@@ -80,15 +80,15 @@ export function DocumentViewer({ documento, onClose }: DocumentViewerProps) {
         <div className="flex-1 overflow-hidden">
           {loading && (
             <div className="flex items-center justify-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              <p className="ml-3 text-gray-600">Cargando documento...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="ml-3 text-muted-foreground">Cargando documento...</p>
             </div>
           )}
 
           {error && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <p className="text-red-600 font-medium">{error}</p>
+                <p className="text-destructive font-medium">{error}</p>
                 <Button variant="outline" onClick={onClose} className="mt-4">
                   Cerrar
                 </Button>
@@ -121,9 +121,9 @@ export function DocumentViewer({ documento, onClose }: DocumentViewerProps) {
         </div>
 
         {/* Footer */}
-        <div className="border-t p-4 flex items-center justify-between bg-gray-50">
-          <div className="text-sm text-gray-500">
-            Presiona <kbd className="px-2 py-1 bg-gray-200 rounded text-xs">ESC</kbd> para cerrar
+        <div className="border-t border-border p-4 flex items-center justify-between bg-secondary">
+          <div className="text-sm text-muted-foreground">
+            Presiona <kbd className="px-2 py-1 bg-accent rounded text-xs text-foreground">ESC</kbd> para cerrar
           </div>
           <div className="flex gap-2">
             {presignedUrl && (

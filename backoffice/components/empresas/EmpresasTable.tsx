@@ -65,37 +65,37 @@ export function EmpresasTable({ empresas }: EmpresasTableProps) {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="pb-3 text-left text-sm font-medium text-gray-500">NIT</th>
-                  <th className="pb-3 text-left text-sm font-medium text-gray-500">Razón Social</th>
-                  <th className="pb-3 text-left text-sm font-medium text-gray-500">Ciudad</th>
-                  <th className="pb-3 text-left text-sm font-medium text-gray-500">Estado</th>
-                  <th className="pb-3 text-left text-sm font-medium text-gray-500">Fecha</th>
-                  <th className="pb-3 text-left text-sm font-medium text-gray-500">Acciones</th>
+                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">NIT</th>
+                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">Razón Social</th>
+                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">Ciudad</th>
+                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">Estado</th>
+                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">Fecha</th>
+                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {empresasFiltradas.map((empresa) => (
-                  <tr key={empresa.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-4 text-sm font-medium text-gray-900">
+                  <tr key={empresa.id} className="hover:bg-accent transition-colors">
+                    <td className="py-4 text-sm font-medium text-foreground">
                       {empresa.nit}
                     </td>
                     <td className="py-4">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-foreground">
                           {empresa.razon_social}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {empresa.representante_legal_nombre}
                         </p>
                       </div>
                     </td>
-                    <td className="py-4 text-sm text-gray-500">
+                    <td className="py-4 text-sm text-muted-foreground">
                       {empresa.ciudad}, {empresa.departamento}
                     </td>
                     <td className="py-4">
                       <EmpresaEstadoBadge estado={empresa.estado} />
                     </td>
-                    <td className="py-4 text-sm text-gray-500">
+                    <td className="py-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         {format(new Date(empresa.created_at), 'dd MMM yyyy', { locale: es })}
@@ -116,7 +116,7 @@ export function EmpresasTable({ empresas }: EmpresasTableProps) {
 
             {empresasFiltradas.length === 0 && (
               <div className="py-12 text-center">
-                <p className="text-gray-500">No hay empresas con el filtro seleccionado</p>
+                <p className="text-muted-foreground">No hay empresas con el filtro seleccionado</p>
               </div>
             )}
           </div>

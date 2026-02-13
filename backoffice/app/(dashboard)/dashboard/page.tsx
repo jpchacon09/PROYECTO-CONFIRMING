@@ -39,8 +39,8 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">Gestión de empresas pagadoras en onboarding</p>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground">Gestión de empresas pagadoras en onboarding</p>
       </div>
 
       {/* Stats */}
@@ -59,10 +59,10 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pendientes}</div>
+            <div className="text-2xl font-bold text-yellow-500">{stats.pendientes}</div>
             <p className="text-xs text-muted-foreground mt-1">Esperando revisión</p>
           </CardContent>
         </Card>
@@ -70,10 +70,10 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-600" />
+            <Calendar className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.en_revision}</div>
+            <div className="text-2xl font-bold text-blue-400">{stats.en_revision}</div>
             <p className="text-xs text-muted-foreground mt-1">En proceso</p>
           </CardContent>
         </Card>
@@ -81,10 +81,10 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Incompletos</CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
+            <Clock className="h-4 w-4 text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.documentos_incompletos}</div>
+            <div className="text-2xl font-bold text-orange-400">{stats.documentos_incompletos}</div>
             <p className="text-xs text-muted-foreground mt-1">Faltan docs</p>
           </CardContent>
         </Card>
@@ -92,10 +92,10 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Aprobadas</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CheckCircle className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.aprobadas}</div>
+            <div className="text-2xl font-bold text-primary">{stats.aprobadas}</div>
             <p className="text-xs text-muted-foreground mt-1">Onboarding completo</p>
           </CardContent>
         </Card>
@@ -103,10 +103,10 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Rechazadas</CardTitle>
-            <XCircle className="h-4 w-4 text-red-600" />
+            <XCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.rechazadas}</div>
+            <div className="text-2xl font-bold text-destructive">{stats.rechazadas}</div>
             <p className="text-xs text-muted-foreground mt-1">No aprobadas</p>
           </CardContent>
         </Card>
@@ -117,9 +117,9 @@ export default async function DashboardPage() {
 
       {/* Info de conexión */}
       {empresas.length === 0 && (
-        <Card className="border-yellow-200 bg-yellow-50">
+        <Card className="border-yellow-500/30 bg-yellow-500/10">
           <CardContent className="pt-6">
-            <p className="text-sm text-yellow-900">
+            <p className="text-sm text-yellow-300">
               <span className="font-semibold">No hay empresas registradas.</span>
               {' '}La base de datos está vacía. Puedes crear empresas de prueba desde el onboarding o insertarlas manualmente en Supabase.
             </p>
@@ -128,10 +128,10 @@ export default async function DashboardPage() {
       )}
 
       {empresas.length > 0 && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-primary/30 bg-primary/10">
           <CardContent className="pt-6">
-            <p className="text-sm text-green-900">
-              <span className="font-semibold">✅ Conectado a Supabase!</span>
+            <p className="text-sm text-primary">
+              <span className="font-semibold">Conectado a Supabase</span>
               {' '}Mostrando {empresas.length} empresa{empresas.length !== 1 ? 's' : ''} desde la base de datos real.
             </p>
           </CardContent>

@@ -75,19 +75,19 @@ export function ComentariosPanel({ comentarios: initialComentarios, empresaId }:
           {/* Lista de comentarios */}
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {initialComentarios.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">
+              <p className="text-sm text-muted-foreground text-center py-8">
                 No hay comentarios internos
               </p>
             ) : (
               initialComentarios.map((comentario) => (
                 <div
                   key={comentario.id}
-                  className="bg-gray-50 rounded-lg p-3 border"
+                  className="bg-secondary rounded-lg p-3 border"
                 >
-                  <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">
                     {comentario.comentario}
                   </p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                     <span>Admin</span>
                     <span>•</span>
                     <span>

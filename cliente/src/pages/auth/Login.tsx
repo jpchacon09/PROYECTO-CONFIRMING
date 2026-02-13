@@ -105,7 +105,7 @@ export function Login() {
 
   if (emailSent) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">¡Enlace enviado!</CardTitle>
@@ -113,7 +113,7 @@ export function Login() {
               Hemos enviado un enlace mágico a <strong>{email}</strong>
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-center text-sm text-gray-600">
+          <CardContent className="space-y-4 text-center text-sm text-muted-foreground">
             <p>Revisa tu bandeja de entrada y haz clic en el enlace para iniciar sesión.</p>
             <p>El enlace expira en 1 hora.</p>
             <Button
@@ -130,7 +130,7 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">Bienvenido</CardTitle>
@@ -171,7 +171,7 @@ export function Login() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">o</span>
+              <span className="bg-card px-2 text-muted-foreground">o</span>
             </div>
           </div>
 
@@ -235,7 +235,7 @@ export function Login() {
             </Button>
           </div>
 
-          <p className="text-center text-xs text-gray-500 mt-4">
+          <p className="text-center text-xs text-muted-foreground mt-4">
             Al continuar, aceptas nuestros términos y condiciones
           </p>
         </CardContent>

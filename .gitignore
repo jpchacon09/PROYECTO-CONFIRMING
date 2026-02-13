@@ -14,6 +14,8 @@ Credenciales.txt
 
 # Tooling/temp
 supabase/.temp/
+**/.firebase/
+firebase-debug.log*
 
 # OS/editor
 .DS_Store

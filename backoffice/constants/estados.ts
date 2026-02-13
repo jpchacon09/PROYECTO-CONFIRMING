@@ -18,9 +18,9 @@ export const ESTADO_LABELS: Record<EstadoEmpresa, string> = {
 }
 
 export const ESTADO_COLORS: Record<EstadoEmpresa, string> = {
-  pendiente: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  en_revision: 'bg-blue-100 text-blue-800 border-blue-300',
-  documentos_incompletos: 'bg-orange-100 text-orange-800 border-orange-300',
-  aprobado: 'bg-green-100 text-green-800 border-green-300',
-  rechazado: 'bg-red-100 text-red-800 border-red-300',
+  pendiente: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+  en_revision: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+  documentos_incompletos: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+  aprobado: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+  rechazado: 'bg-red-500/10 text-red-400 border-red-500/30',
 }

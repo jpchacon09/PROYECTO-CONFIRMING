@@ -38,11 +38,24 @@ function LoginForm() {
 
     try {
       setLoading(true)
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (error) throw error
+      if (!data.session) throw new Error('No session returned')
+
+      // Persist session in httpOnly cookies for middleware + server components.
+      const resp = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      })
+      if (!resp.ok) throw new Error('Failed to set session cookies')
+
       router.push('/dashboard')
     } catch (error) {
       console.error('Error logging in:', error)
@@ -53,22 +66,22 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Back Office Confirming</CardTitle>
+          <CardTitle className="text-3xl font-bold text-foreground">Back Office Confirming</CardTitle>
           <CardDescription>Ingresa con tu cuenta de administrador</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error === 'unauthorized' && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 border border-red-200">
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive border border-destructive/30">
               No tienes permisos de administrador para acceder a esta aplicación.
             </div>
           )}
 
           <form onSubmit={handleEmailLogin} className="space-y-3">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-muted-foreground mb-1">
                 Email
               </label>
               <input
@@ -76,13 +89,13 @@ function LoginForm() {
                 name="email"
                 type="email"
                 required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="admin@confirming.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-1">
                 Contraseña
               </label>
               <input
@@ -90,7 +103,7 @@ function LoginForm() {
                 name="password"
                 type="password"
                 required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
                 placeholder="••••••••"
               />
             </div>
@@ -102,10 +115,10 @@ function LoginForm() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">O continúa con</span>
+              <span className="bg-card px-2 text-muted-foreground">O continúa con</span>
             </div>
           </div>
 
@@ -136,7 +149,7 @@ function LoginForm() {
             Google
           </Button>
 
-          <p className="text-center text-xs text-gray-500 mt-4">
+          <p className="text-center text-xs text-muted-foreground mt-4">
             Solo usuarios con rol de administrador pueden acceder
           </p>
         </CardContent>
@@ -148,8 +161,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">Cargando...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center text-muted-foreground">Cargando...</div>
       </div>
     }>
       <LoginForm />

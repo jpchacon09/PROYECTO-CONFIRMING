@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { DOCUMENTOS_REQUERIDOS, TAMAÑO_MAX_ARCHIVO, MIME_TYPES_PERMITIDOS } from '@/constants/documentos'
 import type { Documento, EmpresaPagadora, TipoDocumento, GenerarUrlSubidaResponse } from '@/lib/types'
 import { toast } from 'sonner'
-import { Upload, Check, FileText, Loader2 } from 'lucide-react'
+import { Upload, Check, Loader2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/errors'
+import { TypeformStep } from '@/components/typeform/TypeformStep'
+import { TypeformProgress } from '@/components/typeform/TypeformProgress'
+import { TypeformNavigation } from '@/components/typeform/TypeformNavigation'
 
 export function Documentos() {
   const navigate = useNavigate()
@@ -16,6 +19,9 @@ export function Documentos() {
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [uploadingDoc, setUploadingDoc] = useState<TipoDocumento | null>(null)
   const [loading, setLoading] = useState(true)
+  const [currentDocStep, setCurrentDocStep] = useState(0)
+
+  const totalDocSteps = DOCUMENTOS_REQUERIDOS.length + 1 // +1 for summary
 
   const fetchDocumentos = useCallback(async (empresaId: string) => {
     const { data, error } = await supabase
@@ -32,7 +38,6 @@ export function Documentos() {
 
   const fetchEmpresaYDocumentos = useCallback(async () => {
     try {
-      // Obtener sesión
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session) {
@@ -40,7 +45,6 @@ export function Documentos() {
         return
       }
 
-      // Obtener empresa
       const { data: empresaData, error: empresaError } = await supabase
         .from('empresas_pagadoras')
         .select('*')
@@ -60,8 +64,6 @@ export function Documentos() {
       }
 
       setEmpresa(empresaData)
-
-      // Obtener documentos
       await fetchDocumentos(empresaData.id)
     } catch (error: unknown) {
       toast.error(`Error al cargar los datos: ${getErrorMessage(error, 'error desconocido')}`)
@@ -77,13 +79,11 @@ export function Documentos() {
   const handleUpload = async (file: File, tipoDocumento: TipoDocumento) => {
     if (!empresa) return
 
-    // Validar tamaño
     if (file.size > TAMAÑO_MAX_ARCHIVO) {
       toast.error('El archivo supera el tamaño máximo de 10 MB')
       return
     }
 
-    // Validar tipo MIME
     if (!MIME_TYPES_PERMITIDOS.includes(file.type)) {
       toast.error('Solo se permiten archivos PDF, JPG o PNG')
       return
@@ -99,7 +99,6 @@ export function Documentos() {
         return
       }
 
-      // 1. Llamar Edge Function para obtener presigned URL
       const payload = {
         empresa_id: empresa.id,
         tipo_documento: tipoDocumento,
@@ -115,7 +114,6 @@ export function Documentos() {
         }
       )
 
-      // Fallback con fetch directo para manejar mejor errores transitorios de gateway/CORS
       if (!data || error) {
         const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generar-url-subida`
         const maxAttempts = 3
@@ -160,7 +158,6 @@ export function Documentos() {
         return
       }
 
-      // 2. Subir a S3 usando presigned URL
       let uploadResponse: Response
       try {
         uploadResponse = await fetch(data.presigned_url, {
@@ -168,14 +165,11 @@ export function Documentos() {
           body: file,
           headers: {
             'Content-Type': file.type,
-            // Algunos buckets tienen policy que exige SSE-S3 (AES256).
-            // Este header dispara preflight, asi que S3 CORS debe permitirlo.
             'x-amz-server-side-encryption': 'AES256',
           },
         })
       } catch (e) {
         const msg = getErrorMessage(e, 'error desconocido')
-        // En navegadores, fallos de CORS contra S3 suelen verse como "Failed to fetch"/ERR_FAILED.
         toast.error(`Error al subir a S3 (posible CORS): ${msg}`)
         return
       }
@@ -186,10 +180,7 @@ export function Documentos() {
         return
       }
 
-      // 3. Éxito
       toast.success('Documento subido correctamente')
-
-      // 4. Refrescar lista de documentos
       await fetchDocumentos(empresa.id)
     } catch (error: unknown) {
       toast.error(`Error al subir el documento: ${getErrorMessage(error, 'error desconocido')}`)
@@ -231,122 +222,109 @@ export function Documentos() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Documentos requeridos</h1>
-          <p className="text-gray-600 mt-2">Paso 2 de 2 - Sube los documentos de tu empresa</p>
-          <div className="mt-4 h-2 bg-gray-200 rounded-full">
-            <div className="h-2 bg-primary rounded-full w-full" />
-          </div>
-        </div>
+    <div className="min-h-screen bg-background">
+      <TypeformProgress current={currentDocStep + 1} total={totalDocSteps} />
 
-        <div className="mb-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Documentos subidos</p>
-                  <p className="text-2xl font-bold">
-                    {documentosSubidos.length} / {DOCUMENTOS_REQUERIDOS.length}
-                  </p>
-                </div>
-                {todoListo && (
-                  <Badge className="bg-green-500 text-white">
-                    <Check className="h-4 w-4 mr-1" />
-                    Completo
-                  </Badge>
+      <AnimatePresence mode="wait">
+        {currentDocStep < DOCUMENTOS_REQUERIDOS.length ? (() => {
+          const docReq = DOCUMENTOS_REQUERIDOS[currentDocStep]
+          const docSubido = documentos.find((d) => d.tipo_documento === docReq.tipo)
+          const isUploading = uploadingDoc === docReq.tipo
+
+          return (
+            <TypeformStep key={docReq.tipo} stepNumber={currentDocStep + 1} totalSteps={DOCUMENTOS_REQUERIDOS.length}>
+              <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
+                {docReq.nombre}
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                {docReq.descripcion}
+              </p>
+
+              <div
+                className="border-2 border-dashed border-border rounded-2xl p-12 text-center
+                           hover:border-primary/50 transition-all duration-300 cursor-pointer
+                           hover:bg-primary/[0.05]"
+                onClick={() => !isUploading && handleFileSelect(docReq.tipo)}
+              >
+                {docSubido ? (
+                  <div className="space-y-3">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Check className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-medium text-foreground">{docSubido.nombre_original}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(docSubido.tamano_bytes / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                    <Button variant="outline" size="sm" type="button">
+                      Reemplazar documento
+                    </Button>
+                  </div>
+                ) : isUploading ? (
+                  <div className="space-y-3">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+                    <p className="text-lg text-muted-foreground">Subiendo documento...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Upload className="h-8 w-8 text-primary/60" />
+                    </div>
+                    <p className="text-lg text-foreground">Haz clic para seleccionar un archivo</p>
+                    <p className="text-sm text-muted-foreground">
+                      {docReq.formatos.map(f => f.split('/')[1]?.toUpperCase()).join(', ')} &mdash; max 10 MB
+                    </p>
+                  </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </TypeformStep>
+          )
+        })() : (
+          <TypeformStep key="summary">
+            <h2 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">
+              Resumen de documentos
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8">
+              {todoListo
+                ? 'Todos los documentos han sido subidos. Puedes enviar tu solicitud.'
+                : `Faltan ${DOCUMENTOS_REQUERIDOS.length - documentosSubidos.length} documento(s) por subir.`}
+            </p>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {DOCUMENTOS_REQUERIDOS.map((docReq) => {
-            const docSubido = documentos.find((d) => d.tipo_documento === docReq.tipo)
-            const isUploading = uploadingDoc === docReq.tipo
-
-            return (
-              <Card key={docReq.tipo} className="relative">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <FileText className="h-5 w-5 text-primary mt-1" />
-                      <div>
-                        <CardTitle className="text-lg">{docReq.nombre}</CardTitle>
-                        <CardDescription className="text-sm mt-1">
-                          {docReq.descripcion}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    {docSubido && (
-                      <Badge className="bg-green-500 text-white">
-                        <Check className="h-3 w-3" />
+            <div className="space-y-1">
+              {DOCUMENTOS_REQUERIDOS.map((docReq, index) => {
+                const uploaded = documentos.some((d) => d.tipo_documento === docReq.tipo)
+                return (
+                  <div
+                    key={docReq.tipo}
+                    className="flex items-center justify-between py-4 border-b border-border cursor-pointer hover:bg-secondary/50 px-2 rounded-lg transition-colors"
+                    onClick={() => !uploaded && setCurrentDocStep(index)}
+                  >
+                    <span className="text-lg text-foreground">{docReq.nombre}</span>
+                    {uploaded ? (
+                      <Badge className="bg-primary text-primary-foreground">
+                        <Check className="h-3 w-3 mr-1" />
+                        Subido
                       </Badge>
+                    ) : (
+                      <span className="text-sm text-destructive font-medium">Pendiente</span>
                     )}
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {docSubido ? (
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600">
-                        <strong>Archivo:</strong> {docSubido.nombre_original}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Tamaño:</strong> {(docSubido.tamano_bytes / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleFileSelect(docReq.tipo)}
-                        disabled={isUploading}
-                        className="w-full"
-                      >
-                        Reemplazar documento
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() => handleFileSelect(docReq.tipo)}
-                      disabled={isUploading}
-                      className="w-full"
-                    >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Subiendo...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Subir documento
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                )
+              })}
+            </div>
+          </TypeformStep>
+        )}
+      </AnimatePresence>
 
-        <div className="mt-8">
-          <Button
-            onClick={handleEnviarSolicitud}
-            disabled={!todoListo}
-            size="lg"
-            className="w-full"
-          >
-            Enviar solicitud
-          </Button>
-          {!todoListo && (
-            <p className="text-sm text-center text-gray-500 mt-2">
-              Debes subir todos los documentos para continuar
-            </p>
-          )}
-        </div>
-      </div>
+      <TypeformNavigation
+        onPrev={() => setCurrentDocStep((s) => Math.max(0, s - 1))}
+        onNext={() => setCurrentDocStep((s) => Math.min(totalDocSteps - 1, s + 1))}
+        canGoPrev={currentDocStep > 0}
+        canGoNext={currentDocStep < totalDocSteps - 1}
+        showSubmit={currentDocStep === totalDocSteps - 1}
+        submitLabel="Enviar solicitud"
+        loading={false}
+        onSubmitClick={todoListo ? handleEnviarSolicitud : undefined}
+      />
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import type { EmpresaPagadora } from '@/lib/types'
 import { CheckCircle, XCircle, FileWarning, Eye } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client'
 
 interface AccionesAdminProps {
   empresa: EmpresaPagadora
@@ -75,10 +76,17 @@ export function AccionesAdmin({ empresa }: AccionesAdminProps) {
     try {
       setLoading(true)
 
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData.session?.access_token
+      if (!accessToken) {
+        throw new Error('Sesion no encontrada. Vuelve a iniciar sesion.')
+      }
+
       const response = await fetch(`/api/admin/empresas/${empresa.id}/estado`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           nuevo_estado: accionSeleccionada.estado,
@@ -106,12 +114,12 @@ export function AccionesAdmin({ empresa }: AccionesAdminProps) {
 
   return (
     <>
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="border-primary/30 bg-primary/5">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900">Acciones de Administrador</h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <h3 className="font-semibold text-foreground">Acciones de Administrador</h3>
+              <p className="text-sm text-muted-foreground mt-1">
                 Cambia el estado de esta empresa en el proceso de onboarding
               </p>
             </div>
@@ -136,13 +144,13 @@ export function AccionesAdmin({ empresa }: AccionesAdminProps) {
       {/* Dialog de confirmación */}
       {showDialog && accionSeleccionada && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
             <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">
+              <h3 className="text-lg font-semibold text-foreground mb-4">
                 {accionSeleccionada.titulo}
               </h3>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 ¿Estás seguro de que deseas cambiar el estado de la empresa{' '}
                 <strong>{empresa.razon_social}</strong> a{' '}
                 <strong>{accionSeleccionada.estado.replace(/_/g, ' ')}</strong>?

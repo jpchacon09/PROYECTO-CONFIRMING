@@ -551,6 +551,17 @@ CREATE POLICY "Usuarios ven historial de su empresa"
         )
     );
 
+-- Necesario para que el trigger `registrar_cambio_estado()` pueda insertar historial
+-- cuando un admin cambia el estado desde el backoffice.
+CREATE POLICY "Admins pueden insertar historial"
+    ON public.historial_estados FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.usuarios
+            WHERE id = auth.uid() AND rol = 'admin'
+        )
+    );
+
 -- Políticas para NOTIFICACIONES (solo sistema y admins)
 CREATE POLICY "Admins ven todas las notificaciones"
     ON public.notificaciones_enviadas FOR SELECT
@@ -558,6 +569,27 @@ CREATE POLICY "Admins ven todas las notificaciones"
         EXISTS (
             SELECT 1 FROM public.usuarios
             WHERE id = auth.uid() AND rol = 'admin'
+        )
+    );
+
+-- Necesario para que triggers puedan insertar notificaciones cuando un admin actualiza estados
+-- o cuando se completa el onboarding por carga de documentos.
+CREATE POLICY "Admins pueden insertar notificaciones"
+    ON public.notificaciones_enviadas FOR INSERT
+    WITH CHECK (
+        -- Admins pueden insertar cualquier notificacion
+        EXISTS (
+            SELECT 1 FROM public.usuarios
+            WHERE id = auth.uid() AND rol = 'admin'
+        )
+        -- Pagadores pueden insertar notificaciones solo de SU empresa (ej: trigger onboarding_completo)
+        OR (
+            notificaciones_enviadas.empresa_id IS NOT NULL
+            AND EXISTS (
+                SELECT 1 FROM public.empresas_pagadoras ep
+                WHERE ep.id = notificaciones_enviadas.empresa_id
+                AND ep.usuario_id = auth.uid()
+            )
         )
     );
 

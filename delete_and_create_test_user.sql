@@ -4,6 +4,13 @@
 -- Email: testing@platam.co
 -- Password: Testing123!
 -- ============================================================================
+--
+-- Nota importante:
+-- Si creas usuarios directamente en `auth.users`, ciertas columnas NO pueden
+-- quedar en NULL o el login por password puede fallar con:
+--   500: "Database error querying schema"
+-- Ver: https://github.com/supabase/auth/issues/1940
+-- Por eso seteamos a '' (string vacio) los campos de tokens.
 
 -- Paso 1: Eliminar usuario existente
 DELETE FROM auth.users WHERE email = 'testing@platam.co';
@@ -30,7 +37,11 @@ BEGIN
     updated_at,
     raw_app_meta_data,
     raw_user_meta_data,
-    is_super_admin
+    is_super_admin,
+    confirmation_token,
+    email_change,
+    email_change_token_new,
+    recovery_token
   ) VALUES (
     '00000000-0000-0000-0000-000000000000',
     new_user_id,
@@ -44,7 +55,11 @@ BEGIN
     now(),
     '{"provider":"email","providers":["email"]}',
     '{}',
-    false
+    false,
+    '',
+    '',
+    '',
+    ''
   );
 
   -- Insertar en auth.identities

@@ -51,19 +51,19 @@ export function DashboardSimple() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b">
+      <header className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Portal de Confirming</h1>
+          <h1 className="text-xl font-bold text-foreground">Portal de Confirming</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user?.email}</span>
+            <span className="text-sm text-muted-foreground">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Cerrar sesión
             </Button>
@@ -74,12 +74,11 @@ export function DashboardSimple() {
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">Bienvenido</h2>
-          <p className="text-gray-600 mt-2">Plataforma de Confirming - Onboarding de Pagadores</p>
+          <h2 className="text-3xl font-bold text-foreground">Bienvenido</h2>
+          <p className="text-muted-foreground mt-2">Plataforma de Confirming - Onboarding de Pagadores</p>
         </div>
 
         {!empresa ? (
-          // No tiene empresa - Mostrar opción de iniciar onboarding
           <Card>
             <CardHeader>
               <CardTitle>Completa tu Onboarding</CardTitle>
@@ -88,9 +87,9 @@ export function DashboardSimple() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">¿Qué necesitas?</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                <h3 className="font-semibold text-primary mb-2">¿Qué necesitas?</h3>
+                <ul className="text-sm text-foreground/80 space-y-1">
                   <li>• Información básica de tu empresa (NIT, razón social, etc.)</li>
                   <li>• Datos del representante legal</li>
                   <li>• 6 documentos requeridos (Cámara de Comercio, RUT, etc.)</li>
@@ -102,7 +101,6 @@ export function DashboardSimple() {
             </CardContent>
           </Card>
         ) : (
-          // Tiene empresa - Mostrar estado
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -110,21 +108,21 @@ export function DashboardSimple() {
                   <CardTitle>{empresa.razon_social || 'Tu Empresa'}</CardTitle>
                   <CardDescription>NIT: {empresa.nit}</CardDescription>
                 </div>
-                <Badge className="bg-blue-100 text-blue-800">
+                <Badge>
                   {ESTADO_LABELS[empresa.estado]}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Tu solicitud de onboarding está en proceso.
                 </p>
-                <div className="bg-gray-50 border rounded-lg p-4">
-                  <p className="text-sm text-gray-600">
+                <div className="bg-secondary border border-border rounded-lg p-4">
+                  <p className="text-sm text-secondary-foreground">
                     <strong>Estado actual:</strong> {ESTADO_LABELS[empresa.estado]}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-secondary-foreground">
                     <strong>Creado:</strong> {new Date(empresa.created_at).toLocaleDateString('es-CO')}
                   </p>
                 </div>
@@ -134,12 +132,12 @@ export function DashboardSimple() {
         )}
 
         {/* Info adicional */}
-        <div className="mt-6 bg-white border rounded-lg p-4">
-          <p className="text-sm text-gray-600">
-            <strong>Email de contacto:</strong> {user?.email}
+        <div className="mt-6 bg-card border border-border rounded-lg p-4">
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-foreground">Email de contacto:</strong> {user?.email}
           </p>
-          <p className="text-sm text-gray-600">
-            <strong>ID de usuario:</strong> {user?.id}
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-foreground">ID de usuario:</strong> {user?.id}
           </p>
         </div>
       </div>

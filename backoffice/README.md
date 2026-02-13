@@ -93,6 +93,10 @@ El middleware verifica:
 
 Si alguna validación falla → redirect a `/login`
 
+Notas:
+- OAuth (Google) usa `/auth/callback` para intercambiar el `code` por sesión y guardar `sb-access-token`/`sb-refresh-token` en cookies httpOnly.
+- Email/Password usa `/api/auth/session` para guardar esos mismos tokens en cookies (requerido para server components + middleware).
+
 ## 📊 Estados del Onboarding
 
 Según `CONTRATO.md`:

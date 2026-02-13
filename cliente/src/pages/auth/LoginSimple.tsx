@@ -1,8 +1,8 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/errors'
 
@@ -122,19 +122,42 @@ export function LoginSimple() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl">Bienvenido</CardTitle>
-          <CardDescription className="text-base">
-            Plataforma de Confirming - Onboarding de Pagadores
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
+      <motion.div
+        className="w-full max-w-md space-y-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        <div className="text-center space-y-3">
+          <motion.h1
+            className="text-4xl md:text-5xl font-bold tracking-tight text-foreground"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+          >
+            Bienvenido
+          </motion.h1>
+          <motion.p
+            className="text-lg text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            Plataforma de Confirming
+          </motion.p>
+        </div>
+
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
           <Button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full h-12"
+            className="w-full h-14 rounded-full text-base"
             variant="outline"
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -158,42 +181,50 @@ export function LoginSimple() {
             Continuar con Google
           </Button>
 
-          <div className="relative">
+          <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">o</span>
+              <span className="bg-background px-3 text-muted-foreground">o</span>
             </div>
           </div>
 
           <div className="space-y-4">
             <Input
+              variant="typeform"
               type="email"
               placeholder="tu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
-              className="h-12"
+              className="text-xl md:text-2xl"
             />
 
             {showPassword && (
-              <Input
-                type="password"
-                placeholder="Contraseña (mín. 6 caracteres)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                className="h-12"
-              />
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                transition={{ duration: 0.3 }}
+              >
+                <Input
+                  variant="typeform"
+                  type="password"
+                  placeholder="Contraseña (mín. 6 caracteres)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  className="text-xl md:text-2xl"
+                />
+              </motion.div>
             )}
 
             {showPassword ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <Button
                   onClick={handlePasswordSignIn}
                   disabled={loading}
-                  className="h-12"
+                  className="h-14 rounded-full text-base"
                   variant="outline"
                 >
                   Iniciar sesión
@@ -201,7 +232,7 @@ export function LoginSimple() {
                 <Button
                   onClick={handlePasswordSignUp}
                   disabled={loading}
-                  className="h-12"
+                  className="h-14 rounded-full text-base"
                 >
                   Crear cuenta
                 </Button>
@@ -210,7 +241,7 @@ export function LoginSimple() {
               <Button
                 onClick={handleMagicLink}
                 disabled={loading}
-                className="w-full h-12"
+                className="w-full h-14 rounded-full text-base"
               >
                 {loading ? 'Enviando...' : 'Enviar enlace mágico'}
               </Button>
@@ -220,18 +251,18 @@ export function LoginSimple() {
               onClick={() => setShowPassword(!showPassword)}
               disabled={loading}
               variant="ghost"
-              className="w-full text-sm"
+              className="w-full text-sm text-muted-foreground"
               type="button"
             >
               {showPassword ? '← Volver a Magic Link' : 'Usar email y contraseña →'}
             </Button>
           </div>
 
-          <p className="text-center text-xs text-gray-500 mt-4">
+          <p className="text-center text-xs text-muted-foreground pt-4">
             Al continuar, aceptas nuestros términos y condiciones
           </p>
-        </CardContent>
-      </Card>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }
