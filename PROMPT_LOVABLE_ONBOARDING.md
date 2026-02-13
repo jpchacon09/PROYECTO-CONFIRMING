@@ -25,7 +25,7 @@ Construye una aplicación web moderna para el onboarding digital de empresas pag
 ### Variables de entorno necesarias:
 ```
 VITE_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
 ```
 
 ### Inicializar cliente Supabase:

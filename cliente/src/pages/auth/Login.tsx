@@ -1,31 +1,31 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/errors'
+import { supabase } from '@/lib/supabase'
 
 export function Login() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const { signInWithGoogle, signInWithMagicLink } = useAuth()
-  const navigate = useNavigate()
 
   const handleGoogleLogin = async () => {
     try {
       setLoading(true)
       await signInWithGoogle()
-    } catch (error: any) {
-      toast.error(error.message || 'Error al iniciar sesión con Google')
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al iniciar sesión con Google'))
       setLoading(false)
     }
   }
 
-  const handleMagicLinkLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleMagicLinkLogin = async () => {
     if (!email) {
       toast.error('Por favor ingresa tu email')
       return
@@ -36,8 +36,68 @@ export function Login() {
       await signInWithMagicLink(email)
       setEmailSent(true)
       toast.success('¡Enlace enviado! Revisa tu email')
-    } catch (error: any) {
-      toast.error(error.message || 'Error al enviar el enlace')
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al enviar el enlace'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordSignIn = async () => {
+    if (!email || !password) {
+      toast.error('Por favor ingresa email y contraseña')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('¡Sesión iniciada!')
+        window.location.href = '/auth/callback'
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al iniciar sesión'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordSignUp = async () => {
+    if (!email || !password) {
+      toast.error('Por favor ingresa email y contraseña')
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('¡Cuenta creada! Iniciando sesión...')
+        window.location.href = '/auth/callback'
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al crear cuenta'))
     } finally {
       setLoading(false)
     }
@@ -115,21 +175,65 @@ export function Login() {
             </div>
           </div>
 
-          <form onSubmit={handleMagicLinkLogin} className="space-y-4">
-            <div>
+          <div className="space-y-4">
+            <Input
+              type="email"
+              placeholder="tu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              className="h-12"
+            />
+
+            {showPassword && (
               <Input
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="password"
+                placeholder="Contraseña (mín. 6 caracteres)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 className="h-12"
               />
-            </div>
-            <Button type="submit" disabled={loading} className="w-full h-12">
-              {loading ? 'Enviando...' : 'Enviar enlace mágico'}
+            )}
+
+            {showPassword ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={handlePasswordSignIn}
+                  disabled={loading}
+                  className="h-12"
+                  variant="outline"
+                >
+                  Iniciar sesión
+                </Button>
+                <Button
+                  onClick={handlePasswordSignUp}
+                  disabled={loading}
+                  className="h-12"
+                >
+                  Crear cuenta
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onClick={handleMagicLinkLogin}
+                disabled={loading}
+                className="w-full h-12"
+              >
+                {loading ? 'Enviando...' : 'Enviar enlace mágico'}
+              </Button>
+            )}
+
+            <Button
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={loading}
+              variant="ghost"
+              className="w-full text-sm"
+              type="button"
+            >
+              {showPassword ? '← Volver a Magic Link' : 'Usar email y contraseña →'}
             </Button>
-          </form>
+          </div>
 
           <p className="text-center text-xs text-gray-500 mt-4">
             Al continuar, aceptas nuestros términos y condiciones

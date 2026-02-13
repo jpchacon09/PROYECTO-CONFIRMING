@@ -12,9 +12,7 @@
 // ============================================================================
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import { S3Client, GetObjectCommand } from 'https://esm.sh/@aws-sdk/client-s3@3.600.0'
-import { getSignedUrl } from 'https://esm.sh/@aws-sdk/s3-request-presigner@3.600.0'
+import { createClient } from 'npm:@supabase/supabase-js@2.45.0'
 
 // ============================================================================
 // Tipos
@@ -37,6 +35,144 @@ interface SuccessResponse {
   expires_in: number
   mime_type: string
   nombre_original: string
+}
+
+interface DocumentoConEmpresa {
+  id: string
+  s3_bucket: string
+  s3_key: string
+  mime_type: string
+  nombre_original: string
+  empresa_id: string
+  empresas_pagadoras: {
+    usuario_id: string
+  } | null
+}
+
+const textEncoder = new TextEncoder()
+
+function decodeJwtPayload(token: string): { sub?: string; exp?: number } | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
+    const json = atob(padded)
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+function toHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(value))
+  return toHex(digest)
+}
+
+async function hmacSha256(
+  key: ArrayBuffer | string,
+  value: string
+): Promise<ArrayBuffer> {
+  const keyBytes = typeof key === 'string' ? textEncoder.encode(key) : new Uint8Array(key)
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyBytes,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+
+  return await crypto.subtle.sign('HMAC', cryptoKey, textEncoder.encode(value))
+}
+
+function encodeRfc3986(value: string): string {
+  return encodeURIComponent(value).replace(
+    /[!'()*]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+  )
+}
+
+function encodeS3Path(key: string): string {
+  return key
+    .split('/')
+    .map((segment) => encodeRfc3986(segment))
+    .join('/')
+}
+
+function amzDates(now: Date): { amzDate: string; dateStamp: string } {
+  const iso = now.toISOString()
+  const dateStamp = iso.slice(0, 10).replace(/-/g, '')
+  const amzDate = `${dateStamp}T${iso.slice(11, 19).replace(/:/g, '')}Z`
+  return { amzDate, dateStamp }
+}
+
+function buildCanonicalQuery(query: Record<string, string>): string {
+  return Object.entries(query)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${encodeRfc3986(key)}=${encodeRfc3986(value)}`)
+    .join('&')
+}
+
+async function deriveSigningKey(
+  secretAccessKey: string,
+  dateStamp: string,
+  region: string
+): Promise<ArrayBuffer> {
+  const kDate = await hmacSha256(`AWS4${secretAccessKey}`, dateStamp)
+  const kRegion = await hmacSha256(kDate, region)
+  const kService = await hmacSha256(kRegion, 's3')
+  return await hmacSha256(kService, 'aws4_request')
+}
+
+async function createPresignedS3GetUrl(
+  bucket: string,
+  key: string,
+  region: string,
+  accessKeyId: string,
+  secretAccessKey: string,
+  expiresIn: number
+): Promise<string> {
+  const host = `${bucket}.s3.${region}.amazonaws.com`
+  const canonicalUri = `/${encodeS3Path(key)}`
+  const { amzDate, dateStamp } = amzDates(new Date())
+  const credentialScope = `${dateStamp}/${region}/s3/aws4_request`
+
+  const query: Record<string, string> = {
+    'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+    'X-Amz-Credential': `${accessKeyId}/${credentialScope}`,
+    'X-Amz-Date': amzDate,
+    'X-Amz-Expires': String(expiresIn),
+    'X-Amz-SignedHeaders': 'host'
+  }
+
+  const canonicalQuery = buildCanonicalQuery(query)
+  const canonicalRequest = [
+    'GET',
+    canonicalUri,
+    canonicalQuery,
+    `host:${host}\n`,
+    'host',
+    'UNSIGNED-PAYLOAD'
+  ].join('\n')
+
+  const stringToSign = [
+    'AWS4-HMAC-SHA256',
+    amzDate,
+    credentialScope,
+    await sha256Hex(canonicalRequest)
+  ].join('\n')
+
+  const signingKey = await deriveSigningKey(secretAccessKey, dateStamp, region)
+  const signature = toHex(await hmacSha256(signingKey, stringToSign))
+  const finalQuery = `${canonicalQuery}&X-Amz-Signature=${signature}`
+
+  return `https://${host}${canonicalUri}?${finalQuery}`
 }
 
 // ============================================================================
@@ -63,11 +199,15 @@ function errorResponse(code: string, message: string): Response {
   if (code === 'UNAUTHENTICATED') status = 401
   if (code === 'UNAUTHORIZED_DOCUMENTO') status = 403
   if (code === 'DOCUMENTO_NOT_FOUND') status = 404
+  if (code === 'CONFIG_ERROR') status = 500
   if (code.includes('S3_ERROR') || code.includes('DATABASE_ERROR')) status = 500
 
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' }
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    }
   })
 }
 
@@ -82,7 +222,7 @@ serve(async (req) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'authorization, content-type'
+        'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey'
       }
     })
   }
@@ -97,31 +237,33 @@ serve(async (req) => {
       return errorResponse('UNAUTHENTICATED', 'Token de autenticación requerido')
     }
 
-    // Usar service key para bypass RLS (verificaremos permisos manualmente)
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    // Cliente regular para verificar usuario
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader }
-        }
-      }
-    )
+    if (!supabaseUrl || !serviceRoleKey) {
+      return errorResponse('CONFIG_ERROR', 'Faltan variables de entorno de Supabase en la función')
+    }
 
-    const {
-      data: { user },
-      error: userError
-    } = await supabase.auth.getUser()
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+    if (!token) {
+      return errorResponse('UNAUTHENTICATED', 'Token de autenticación inválido')
+    }
 
-    if (userError || !user) {
+    const payload = decodeJwtPayload(token)
+    if (!payload?.sub) {
       return errorResponse('UNAUTHENTICATED', 'Token inválido o expirado')
     }
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return errorResponse('UNAUTHENTICATED', 'Token inválido o expirado')
+    }
+
+    // Cliente admin para operar DB sin depender de RLS.
+    // El JWT ya fue validado por el gateway de Supabase (verify_jwt=true).
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      serviceRoleKey
+    )
+    const userId = payload.sub
 
     // ========================================================================
     // 2. Parsear y validar request body
@@ -157,6 +299,8 @@ serve(async (req) => {
       return errorResponse('DOCUMENTO_NOT_FOUND', 'El documento no existe')
     }
 
+    const documentoData = documento as DocumentoConEmpresa
+
     // ========================================================================
     // 4. Verificar permisos
     // ========================================================================
@@ -165,39 +309,37 @@ serve(async (req) => {
     const { data: usuario } = await supabaseAdmin
       .from('usuarios')
       .select('rol')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     // Verificar si es admin o propietario de la empresa
     const esAdmin = usuario?.rol === 'admin'
-    const esPropietario = (documento as any).empresas_pagadoras?.usuario_id === user.id
+    const esPropietario = documentoData.empresas_pagadoras?.usuario_id === userId
 
     if (!esAdmin && !esPropietario) {
       return errorResponse('UNAUTHORIZED_DOCUMENTO', 'No tienes permiso para ver este documento')
     }
 
     // ========================================================================
-    // 5. Generar presigned URL de S3
+    // 5. Generar presigned URL de S3 (sin SDK remoto para evitar fallos 502)
     // ========================================================================
 
-    const s3Client = new S3Client({
-      region: S3_REGION,
-      credentials: {
-        accessKeyId: Deno.env.get('AWS_ACCESS_KEY_ID') ?? '',
-        secretAccessKey: Deno.env.get('AWS_SECRET_ACCESS_KEY') ?? ''
-      }
-    })
-
-    const command = new GetObjectCommand({
-      Bucket: documento.s3_bucket,
-      Key: documento.s3_key
-    })
+    const awsAccessKeyId = Deno.env.get('AWS_ACCESS_KEY_ID') ?? ''
+    const awsSecretAccessKey = Deno.env.get('AWS_SECRET_ACCESS_KEY') ?? ''
+    if (!awsAccessKeyId || !awsSecretAccessKey) {
+      return errorResponse('CONFIG_ERROR', 'Faltan variables de entorno de AWS en la función')
+    }
 
     let presignedUrl: string
     try {
-      presignedUrl = await getSignedUrl(s3Client, command, {
-        expiresIn: PRESIGNED_URL_EXPIRATION
-      })
+      presignedUrl = await createPresignedS3GetUrl(
+        documentoData.s3_bucket,
+        documentoData.s3_key,
+        S3_REGION,
+        awsAccessKeyId,
+        awsSecretAccessKey,
+        PRESIGNED_URL_EXPIRATION
+      )
     } catch (s3Error) {
       console.error('Error al generar presigned URL:', s3Error)
       return errorResponse('S3_ERROR', 'Error al generar URL de descarga')
@@ -210,8 +352,8 @@ serve(async (req) => {
     const response: SuccessResponse = {
       presigned_url: presignedUrl,
       expires_in: PRESIGNED_URL_EXPIRATION,
-      mime_type: documento.mime_type,
-      nombre_original: documento.nombre_original
+      mime_type: documentoData.mime_type,
+      nombre_original: documentoData.nombre_original
     }
 
     return new Response(JSON.stringify(response), {

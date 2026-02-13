@@ -155,7 +155,7 @@ backoffice/
 ## 🔗 INTEGRACIÓN COMPLETA
 
 ### Supabase
-- **URL:** `https://mdqanwvrxajfgbemdprm.supabase.co`
+- **URL:** `https://TU_PROYECTO.supabase.co`
 - **Estado:** ✅ CONECTADO
 - **Tablas usadas:**
   - `empresas_pagadoras`

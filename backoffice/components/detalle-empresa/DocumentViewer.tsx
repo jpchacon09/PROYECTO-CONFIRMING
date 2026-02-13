@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 import type { Documento } from '@/lib/types'
 import { X, Loader2 } from 'lucide-react'
@@ -104,11 +105,14 @@ export function DocumentViewer({ documento, onClose }: DocumentViewerProps) {
                   title={documento.nombre_original}
                 />
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <img
+                <div className="relative flex items-center justify-center h-full">
+                  <Image
                     src={presignedUrl}
                     alt={documento.nombre_original}
-                    className="max-w-full max-h-full object-contain"
+                    fill
+                    unoptimized
+                    className="object-contain"
+                    sizes="100vw"
                   />
                 </div>
               )}

@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/errors'
 
 export function LoginSimple() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleGoogleLogin = async () => {
@@ -25,9 +28,68 @@ export function LoginSimple() {
       } else {
         toast.success('Redirigiendo a Google...')
       }
-    } catch (error: any) {
-      console.error('Error Google:', error)
-      toast.error(error.message || 'Error al iniciar sesión')
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al iniciar sesión'))
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordSignIn = async () => {
+    if (!email || !password) {
+      toast.error('Por favor ingresa email y contraseña')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('¡Sesión iniciada!')
+        window.location.href = '/auth/callback'
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al iniciar sesión'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordSignUp = async () => {
+    if (!email || !password) {
+      toast.error('Por favor ingresa email y contraseña')
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('¡Cuenta creada! Iniciando sesión...')
+        window.location.href = '/auth/callback'
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al crear cuenta'))
+    } finally {
       setLoading(false)
     }
   }
@@ -38,29 +100,22 @@ export function LoginSimple() {
       return
     }
 
-    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
-    console.log('Intentando enviar magic link a:', email)
-
     try {
       setLoading(true)
-      const { data, error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
-      console.log('Respuesta de Supabase:', { data, error })
-
       if (error) {
-        console.error('Error de Supabase:', error)
         toast.error(error.message)
       } else {
         toast.success('¡Enlace enviado! Revisa tu email')
       }
-    } catch (error: any) {
-      console.error('Error catch:', error)
-      toast.error(error.message || 'Error al enviar el enlace')
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al enviar el enlace'))
     } finally {
       setLoading(false)
     }
@@ -121,12 +176,54 @@ export function LoginSimple() {
               disabled={loading}
               className="h-12"
             />
+
+            {showPassword && (
+              <Input
+                type="password"
+                placeholder="Contraseña (mín. 6 caracteres)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="h-12"
+              />
+            )}
+
+            {showPassword ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={handlePasswordSignIn}
+                  disabled={loading}
+                  className="h-12"
+                  variant="outline"
+                >
+                  Iniciar sesión
+                </Button>
+                <Button
+                  onClick={handlePasswordSignUp}
+                  disabled={loading}
+                  className="h-12"
+                >
+                  Crear cuenta
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onClick={handleMagicLink}
+                disabled={loading}
+                className="w-full h-12"
+              >
+                {loading ? 'Enviando...' : 'Enviar enlace mágico'}
+              </Button>
+            )}
+
             <Button
-              onClick={handleMagicLink}
+              onClick={() => setShowPassword(!showPassword)}
               disabled={loading}
-              className="w-full h-12"
+              variant="ghost"
+              className="w-full text-sm"
+              type="button"
             >
-              {loading ? 'Enviando...' : 'Enviar enlace mágico'}
+              {showPassword ? '← Volver a Magic Link' : 'Usar email y contraseña →'}
             </Button>
           </div>
 

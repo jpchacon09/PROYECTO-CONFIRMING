@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -12,6 +13,7 @@ import { Select } from '@/components/ui/Select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { DEPARTAMENTOS_COLOMBIA } from '@/constants/estados'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/errors'
 
 // Schema de validación
 const empresaSchema = z.object({
@@ -41,7 +43,7 @@ type EmpresaFormData = z.infer<typeof empresaSchema>
 export function DatosEmpresa() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     async function getUser() {
@@ -76,7 +78,7 @@ export function DatosEmpresa() {
     try {
       setLoading(true)
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('empresas_pagadoras')
         .insert({
           usuario_id: user.id,
@@ -84,8 +86,6 @@ export function DatosEmpresa() {
           ip_registro: null, // Obtener del navegador si es necesario
           user_agent: navigator.userAgent,
         })
-        .select()
-        .single()
 
       if (error) {
         if (error.code === '23505') {
@@ -98,8 +98,8 @@ export function DatosEmpresa() {
 
       toast.success('Datos guardados correctamente')
       navigate('/onboarding/documentos')
-    } catch (error: any) {
-      toast.error('Error inesperado: ' + error.message)
+    } catch (error: unknown) {
+      toast.error(`Error inesperado: ${getErrorMessage(error, 'error desconocido')}`)
     } finally {
       setLoading(false)
     }

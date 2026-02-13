@@ -8,7 +8,7 @@
 ## 🎉 TODO COMPLETADO
 
 ### 1. Base de Datos Supabase ✅
-- **URL:** https://mdqanwvrxajfgbemdprm.supabase.co
+- **URL:** https://TU_PROYECTO.supabase.co
 - **Estado:** 9 tablas creadas y funcionando
 - **RLS:** Activo y configurado
 - **Triggers:** Funcionando (historial, notificaciones)
@@ -20,8 +20,8 @@
 
 **Endpoints:**
 ```
-POST https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/generar-url-subida
-POST https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/obtener-url-documento
+POST https://TU_PROYECTO.supabase.co/functions/v1/generar-url-subida
+POST https://TU_PROYECTO.supabase.co/functions/v1/obtener-url-documento
 ```
 
 ### 3. AWS S3 ✅
@@ -49,10 +49,10 @@ POST https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/obtener-url-documento
 ### Variables de Entorno (.env.local)
 ```bash
 # Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://mdqanwvrxajfgbemdprm.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<TU_SUPABASE_ANON_KEY>
 
-SUPABASE_URL=https://mdqanwvrxajfgbemdprm.supabase.co
+SUPABASE_URL=https://TU_PROYECTO.supabase.co
 SUPABASE_SERVICE_KEY=<TU_SUPABASE_SERVICE_KEY>
 
 # AWS S3
@@ -115,7 +115,7 @@ Primero necesitas crear un usuario en Supabase y obtener su JWT token.
 Luego:
 ```bash
 curl -X POST \
-  https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/generar-url-subida \
+  https://TU_PROYECTO.supabase.co/functions/v1/generar-url-subida \
   -H "Authorization: Bearer TU-JWT-TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -149,7 +149,7 @@ El archivo `CONTRATO.md` contiene:
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  'https://mdqanwvrxajfgbemdprm.supabase.co',
+  'https://TU_PROYECTO.supabase.co',
   'TU_SUPABASE_ANON_KEY'
 )
 
@@ -196,8 +196,8 @@ async function subirDocumento(file, empresaId, tipoDocumento) {
 2. **Copiar PROMPT_LOVABLE_ONBOARDING.md** - Prompt completo para Lovable
 3. **Configurar variables de entorno:**
    ```
-   VITE_SUPABASE_URL=https://mdqanwvrxajfgbemdprm.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   VITE_SUPABASE_URL=https://TU_PROYECTO.supabase.co
+   VITE_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
    ```
 4. **Empezar desarrollo** - El backend está listo
 
@@ -241,7 +241,7 @@ Esto puede esperar, pero cuando quieras:
 Si algo falla:
 
 1. **Edge Functions no responden:**
-   - Ver logs: https://supabase.com/dashboard/project/mdqanwvrxajfgbemdprm/functions
+   - Ver logs: https://supabase.com/dashboard/project/TU_PROJECT_REF/functions
    - Verificar secrets: `supabase secrets list`
 
 2. **Presigned URLs fallan:**

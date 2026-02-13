@@ -39,8 +39,8 @@
 ```bash
 # .env para el frontend
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (para server)
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
+SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY> (para server)
 ```
 
 ### 2. **¿Schema ejecutado?**
@@ -68,10 +68,10 @@ supabase functions deploy obtener-url-documento
 Para que las Edge Functions funcionen, necesitan estas variables de entorno en Supabase:
 
 ```bash
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
+AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
 AWS_REGION=us-east-1
-S3_BUCKET=confirming  # (según la Edge Function usa "confirming", no "confirming-documentos-prod")
+AWS_S3_BUCKET=bucketn8n-platam
 ```
 
 ---
@@ -126,4 +126,3 @@ Si la respuesta a todo es **NO**, déjame saber y te ayudo a priorizar qué hace
 ---
 
 **Frontend esperando respuesta...**
-

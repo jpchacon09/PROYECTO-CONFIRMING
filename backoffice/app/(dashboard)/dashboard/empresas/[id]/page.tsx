@@ -200,7 +200,7 @@ export default async function EmpresaDetallePage({ params }: PageProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <DocumentosList documentos={documentos} empresaId={empresa.id} />
+          <DocumentosList documentos={documentos} />
         </CardContent>
       </Card>
 

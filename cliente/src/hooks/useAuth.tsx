@@ -1,8 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
 interface AuthContextType {
-  user: any | null
+  user: User | null
   loading: boolean
   signInWithGoogle: () => Promise<void>
   signInWithMagicLink: (email: string) => Promise<void>
@@ -12,7 +14,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<any | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -58,13 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
-  const value = {
-    user,
-    loading,
-    signInWithGoogle,
-    signInWithMagicLink,
-    signOut,
-  }
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      signInWithGoogle,
+      signInWithMagicLink,
+      signOut,
+    }),
+    [user, loading]
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

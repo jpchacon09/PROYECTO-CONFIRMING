@@ -141,7 +141,7 @@ backoffice/
 ## 🔗 Credenciales Configuradas
 
 ### ✅ Supabase
-- URL: `https://mdqanwvrxajfgbemdprm.supabase.co`
+- URL: `https://TU_PROYECTO.supabase.co`
 - Anon Key: ✅ Configurada
 - Service Key: ✅ Configurada
 
@@ -149,7 +149,7 @@ backoffice/
 - Access Key ID: ✅ Configurada
 - Secret Access Key: ✅ Configurada
 - Region: `us-east-1`
-- Bucket: `confirming`
+- Bucket: `bucketn8n-platam`
 
 ---
 

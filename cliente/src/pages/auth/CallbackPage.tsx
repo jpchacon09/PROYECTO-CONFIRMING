@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { getErrorMessage } from '@/lib/errors'
 
 export function CallbackPage() {
   const navigate = useNavigate()
@@ -9,17 +10,11 @@ export function CallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('Callback iniciado')
-
         // Obtener la sesión actual
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-        console.log('Sesión:', session)
-        console.log('Error de sesión:', sessionError)
-
         if (sessionError) {
           setStatus('Error al obtener sesión')
-          console.error('Error:', sessionError)
           setTimeout(() => navigate('/login'), 2000)
           return
         }
@@ -33,19 +28,15 @@ export function CallbackPage() {
         setStatus('Sesión obtenida. Verificando usuario...')
 
         // Verificar si el usuario existe en la tabla usuarios
-        const { data: usuario, error: usuarioError } = await supabase
+        const { error: usuarioError } = await supabase
           .from('usuarios')
           .select('*')
           .eq('id', session.user.id)
           .single()
 
-        console.log('Usuario en DB:', usuario)
-        console.log('Error usuario:', usuarioError)
-
         // Si no existe, crearlo con rol 'pagador'
         if (usuarioError && usuarioError.code === 'PGRST116') {
           setStatus('Creando usuario...')
-          console.log('Creando usuario nuevo con rol pagador')
 
           const { error: insertError } = await supabase
             .from('usuarios')
@@ -71,9 +62,6 @@ export function CallbackPage() {
           .eq('usuario_id', session.user.id)
           .single()
 
-        console.log('Empresa:', empresa)
-        console.log('Error empresa:', empresaError)
-
         // Redirigir según el caso
         if (empresaError && empresaError.code === 'PGRST116') {
           // No tiene empresa, ir a formulario
@@ -89,9 +77,8 @@ export function CallbackPage() {
           setTimeout(() => navigate('/dashboard'), 1000)
         }
 
-      } catch (error) {
-        console.error('Error en callback:', error)
-        setStatus('Error inesperado')
+      } catch (error: unknown) {
+        setStatus(getErrorMessage(error, 'Error inesperado'))
         setTimeout(() => navigate('/login'), 2000)
       }
     }

@@ -1,5 +1,7 @@
 # Back Office - Confirming Platam
 
+Referencia operativa obligatoria: `../FRONTEND_OPERATIVO.md`
+
 Panel de administración para la gestión del onboarding de empresas pagadoras.
 
 ## 🚀 Stack Tecnológico
@@ -51,14 +53,14 @@ Copia `.env.example` a `.env.local` y configura:
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
-SUPABASE_SERVICE_KEY=eyJhbG...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
+SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY>
 
 # AWS S3
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxx
+AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
 AWS_REGION=us-east-1
-AWS_S3_BUCKET=confirming
+AWS_S3_BUCKET=bucketn8n-platam
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000

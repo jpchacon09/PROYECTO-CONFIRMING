@@ -1,6 +1,6 @@
 # Estado del Backend - Plataforma Confirming
 
-**Última actualización:** 2026-02-12 19:10
+**Última actualización:** 2026-02-13 00:20
 
 ---
 
@@ -12,20 +12,25 @@
 - ✅ Row Level Security (RLS) activo
 - ✅ Funciones SQL creadas
 
-**URL:** https://supabase.com/dashboard/project/mdqanwvrxajfgbemdprm
+**URL:** https://supabase.com/dashboard/project/admmzddhtrvgzbbhkiqf
 
 ### 2. Edge Functions (Supabase)
 - ✅ `generar-url-subida` desplegada
 - ✅ `obtener-url-documento` desplegada
 - ✅ Secrets de AWS configurados
 
-**URL:** https://supabase.com/dashboard/project/mdqanwvrxajfgbemdprm/functions
+**URL:** https://supabase.com/dashboard/project/admmzddhtrvgzbbhkiqf/functions
 
 **Endpoints:**
 ```
-POST https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/generar-url-subida
-POST https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/obtener-url-documento
+POST https://admmzddhtrvgzbbhkiqf.supabase.co/functions/v1/generar-url-subida
+POST https://admmzddhtrvgzbbhkiqf.supabase.co/functions/v1/obtener-url-documento
 ```
+
+Notas (2026-02-13):
+
+- Se corrigieron `502 Bad Gateway` intermitentes en `generar-url-subida` eliminando dependencias pesadas remotas (`@aws-sdk/*` vía `esm.sh`) y firmando URLs presignadas de S3 con SigV4 nativo.
+- Se agregó CORS consistente en respuestas de error/éxito para evitar falsos positivos en frontend.
 
 ### 3. Backend Next.js
 - ✅ Estructura de carpetas creada
@@ -68,8 +73,8 @@ POST https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/obtener-url-documento
         "s3:DeleteObject"
       ],
       "Resource": [
-        "arn:aws:s3:::confirming",
-        "arn:aws:s3:::confirming/*"
+        "arn:aws:s3:::bucketn8n-platam",
+        "arn:aws:s3:::bucketn8n-platam/*"
       ]
     }
   ]
@@ -106,7 +111,7 @@ Esto configurará:
 
 ```bash
 curl -X POST \
-  https://mdqanwvrxajfgbemdprm.supabase.co/functions/v1/generar-url-subida \
+  https://admmzddhtrvgzbbhkiqf.supabase.co/functions/v1/generar-url-subida \
   -H "Authorization: Bearer TU-JWT-TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -150,7 +155,7 @@ curl http://localhost:3001/api/health
 ## 🔑 Credenciales Configuradas
 
 ### Supabase:
-- ✅ URL: `https://mdqanwvrxajfgbemdprm.supabase.co`
+- ✅ URL: `https://admmzddhtrvgzbbhkiqf.supabase.co`
 - ✅ Anon Key: Configurada
 - ⚠️ Service Key: Configurada (verificar si es la correcta)
 
@@ -158,11 +163,11 @@ curl http://localhost:3001/api/health
 - ✅ Access Key ID: `Configurada (oculta por seguridad)`
 - ✅ Secret Access Key: Configurada
 - ✅ Region: `us-east-1`
-- ✅ Bucket: `confirming`
+- ✅ Bucket: `bucketn8n-platam`
 
 ### Supabase CLI:
 - ✅ Access Token: Configurado
-- ✅ Proyecto linkeado: `mdqanwvrxajfgbemdprm`
+- ✅ Proyecto linkeado: `admmzddhtrvgzbbhkiqf`
 
 ---
 

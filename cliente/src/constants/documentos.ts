@@ -1,4 +1,4 @@
-import { TipoDocumento } from '@/lib/types'
+import type { TipoDocumento } from '@/lib/types'
 
 export interface DocumentoRequerido {
   tipo: TipoDocumento

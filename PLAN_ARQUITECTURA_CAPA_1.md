@@ -1877,17 +1877,17 @@ serve(async (req) => {
 ```bash
 # Disponibles en Supabase Dashboard > Settings > API
 SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... # SECRETO, solo server
+SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
+SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY> # SECRETO, solo server
 ```
 
 ### 9.2 AWS (S3 + SES)
 
 ```bash
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
 AWS_REGION=us-east-1
-AWS_S3_BUCKET=confirming-documentos-prod
+AWS_S3_BUCKET=bucketn8n-platam
 AWS_SES_FROM_EMAIL=noreply@tudominio.com
 ```
 
@@ -1914,14 +1914,14 @@ N8N_WEBHOOK_SECRET=tu-secret-para-validar-requests
 ```bash
 # Públicas (expuestas al cliente)
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
 NEXT_PUBLIC_APP_URL=https://backoffice.tudominio.com
 
 # Privadas (solo server-side)
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-AWS_S3_BUCKET=confirming-documentos-prod
+SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY>
+AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
+AWS_S3_BUCKET=bucketn8n-platam
 ```
 
 ---

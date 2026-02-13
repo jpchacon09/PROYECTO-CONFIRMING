@@ -28,10 +28,10 @@
 ```bash
 # Frontend (públicas)
 VITE_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
 
 # Backend (privadas - NO exponer al cliente)
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY>
 ```
 
 ### Inicialización del Cliente

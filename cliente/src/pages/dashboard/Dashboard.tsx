@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { EmpresaPagadora, Documento, HistorialEstado } from '@/lib/types'
+import type { EmpresaPagadora, Documento, HistorialEstado } from '@/lib/types'
 import { ESTADO_LABELS, ESTADO_COLORS, ESTADO_DESCRIPTIONS } from '@/constants/estados'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Loader2, Building2, FileText, History, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/errors'
 
 export function Dashboard() {
   const { user, signOut } = useAuth()
@@ -20,13 +21,7 @@ export function Dashboard() {
   const [historial, setHistorial] = useState<HistorialEstado[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (user) {
-      fetchDatos()
-    }
-  }, [user])
-
-  const fetchDatos = async () => {
+  const fetchDatos = useCallback(async () => {
     if (!user) return
 
     try {
@@ -63,12 +58,18 @@ export function Dashboard() {
         .order('created_at', { ascending: false })
 
       if (historialData) setHistorial(historialData)
-    } catch (error: any) {
-      toast.error('Error al cargar los datos: ' + error.message)
+    } catch (error: unknown) {
+      toast.error(`Error al cargar los datos: ${getErrorMessage(error, 'error desconocido')}`)
     } finally {
       setLoading(false)
     }
-  }
+  }, [navigate, user])
+
+  useEffect(() => {
+    if (user) {
+      void fetchDatos()
+    }
+  }, [fetchDatos, user])
 
   const handleSignOut = async () => {
     await signOut()
@@ -209,11 +210,11 @@ export function Dashboard() {
                         <p className="text-sm font-medium">
                           {item.estado_anterior ? (
                             <>
-                              {ESTADO_LABELS[item.estado_anterior as any]} →{' '}
-                              {ESTADO_LABELS[item.estado_nuevo as any]}
+                              {ESTADO_LABELS[item.estado_anterior]} →{' '}
+                              {ESTADO_LABELS[item.estado_nuevo]}
                             </>
                           ) : (
-                            <>Creado como {ESTADO_LABELS[item.estado_nuevo as any]}</>
+                            <>Creado como {ESTADO_LABELS[item.estado_nuevo]}</>
                           )}
                         </p>
                         <p className="text-xs text-gray-500">

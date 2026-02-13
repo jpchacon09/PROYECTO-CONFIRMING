@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import type { EmpresaPagadora } from '@/lib/types'
+import { ESTADO_LABELS } from '@/constants/estados'
 
 export function DashboardSimple() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
-  const [empresa, setEmpresa] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [empresa, setEmpresa] = useState<EmpresaPagadora | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -108,7 +111,7 @@ export function DashboardSimple() {
                   <CardDescription>NIT: {empresa.nit}</CardDescription>
                 </div>
                 <Badge className="bg-blue-100 text-blue-800">
-                  {empresa.estado}
+                  {ESTADO_LABELS[empresa.estado]}
                 </Badge>
               </div>
             </CardHeader>
@@ -119,7 +122,7 @@ export function DashboardSimple() {
                 </p>
                 <div className="bg-gray-50 border rounded-lg p-4">
                   <p className="text-sm text-gray-600">
-                    <strong>Estado actual:</strong> {empresa.estado}
+                    <strong>Estado actual:</strong> {ESTADO_LABELS[empresa.estado]}
                   </p>
                   <p className="text-sm text-gray-600">
                     <strong>Creado:</strong> {new Date(empresa.created_at).toLocaleDateString('es-CO')}

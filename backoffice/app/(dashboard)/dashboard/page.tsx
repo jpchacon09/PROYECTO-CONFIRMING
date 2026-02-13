@@ -2,7 +2,6 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmpresasTable } from '@/components/empresas/EmpresasTable'
 import { Building2, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react'
-import { ESTADOS_EMPRESA } from '@/constants/estados'
 import type { EmpresaPagadora } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'

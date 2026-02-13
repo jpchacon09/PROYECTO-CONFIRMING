@@ -1,4 +1,4 @@
-import { EstadoEmpresa } from '@/lib/types'
+import type { EstadoEmpresa } from '@/lib/types'
 
 export const ESTADO_LABELS: Record<EstadoEmpresa, string> = {
   pendiente: 'Pendiente',

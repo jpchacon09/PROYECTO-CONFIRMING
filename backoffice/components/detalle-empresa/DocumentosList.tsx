@@ -12,10 +12,9 @@ import { DocumentViewer } from './DocumentViewer'
 
 interface DocumentosListProps {
   documentos: Documento[]
-  empresaId: string
 }
 
-export function DocumentosList({ documentos, empresaId }: DocumentosListProps) {
+export function DocumentosList({ documentos }: DocumentosListProps) {
   const [selectedDoc, setSelectedDoc] = useState<Documento | null>(null)
 
   if (documentos.length === 0) {

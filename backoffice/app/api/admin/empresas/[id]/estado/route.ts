@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import type { ApiResponse, Usuario, EmpresaPagadora } from '@/lib/types'
+import type { ApiResponse, Usuario, EmpresaPagadora, UpdateEmpresaPagadora } from '@/lib/types'
 
 const ESTADOS_VALIDOS = [
   'pendiente',
@@ -10,6 +10,11 @@ const ESTADOS_VALIDOS = [
   'aprobado',
   'rechazado'
 ] as const
+type EstadoValido = (typeof ESTADOS_VALIDOS)[number]
+
+function isEstadoValido(value: string): value is EstadoValido {
+  return (ESTADOS_VALIDOS as readonly string[]).includes(value)
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -60,11 +65,12 @@ export async function PATCH(
     }
 
     // Parsear body
-    const body = await req.json()
-    const { nuevo_estado, motivo } = body
+    const body = (await req.json()) as { nuevo_estado?: string; motivo?: string }
+    const nuevo_estado = body.nuevo_estado
+    const motivo = body.motivo
 
     // Validar estado
-    if (!nuevo_estado || !ESTADOS_VALIDOS.includes(nuevo_estado)) {
+    if (!nuevo_estado || !isEstadoValido(nuevo_estado)) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
         error: {
@@ -94,7 +100,7 @@ export async function PATCH(
     const empresa = empresaData as EmpresaPagadora
 
     // Preparar datos de actualización
-    const updateData: any = {
+    const updateData: UpdateEmpresaPagadora = {
       estado: nuevo_estado,
       estado_anterior: empresa.estado,
       fecha_cambio_estado: new Date().toISOString(),
@@ -107,8 +113,7 @@ export async function PATCH(
     }
 
     // Actualizar estado usando Supabase Admin (bypass RLS)
-    // @ts-ignore - Supabase types issue
-    const { data: empresaActualizada, error: updateError } = await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from('empresas_pagadoras')
       .update(updateData)
       .eq('id', params.id)
@@ -138,7 +143,13 @@ export async function PATCH(
         motivo: motivo || null
       })
 
-    return NextResponse.json<ApiResponse<any>>({
+    return NextResponse.json<ApiResponse<{
+      empresa_id: string
+      estado_anterior: EmpresaPagadora['estado']
+      estado_nuevo: EstadoValido
+      cambiado_por: string
+      fecha_cambio: string
+    }>>({
       success: true,
       data: {
         empresa_id: params.id,

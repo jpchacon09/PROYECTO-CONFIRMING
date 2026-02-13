@@ -372,11 +372,11 @@ Configurar en n8n Settings → Variables:
 ```bash
 # Supabase
 SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY>
 
 # AWS
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
 AWS_REGION=us-east-1
 
 # Twilio (para WhatsApp)

@@ -1,5 +1,7 @@
 # 🚀 Frontend Cliente - Plataforma de Confirming
 
+Referencia operativa obligatoria: `../FRONTEND_OPERATIVO.md`
+
 **Fecha:** 2026-02-12
 **Estado:** ✅ COMPLETO Y FUNCIONANDO
 **URL Local:** http://localhost:5173
@@ -51,7 +53,7 @@ npm run dev
 ## 🔗 INTEGRACIÓN
 
 ### Supabase
-- **URL:** `https://mdqanwvrxajfgbemdprm.supabase.co`
+- **URL:** `https://TU_PROYECTO.supabase.co`
 - **Tablas:** usuarios, empresas_pagadoras, documentos, historial_estados
 
 ### Edge Functions

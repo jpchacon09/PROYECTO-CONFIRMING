@@ -6,7 +6,6 @@ export async function createServerSupabaseClient() {
 
   // Obtener el token de sesión de las cookies
   const accessToken = cookieStore.get('sb-access-token')?.value
-  const refreshToken = cookieStore.get('sb-refresh-token')?.value
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

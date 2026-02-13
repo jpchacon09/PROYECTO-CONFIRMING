@@ -68,8 +68,8 @@ export interface Documento {
   tamano_bytes: number
 
   extraccion_completa: boolean
-  extraccion_data: any | null
-  extraccion_resumen: any | null
+  extraccion_data: Record<string, unknown> | null
+  extraccion_resumen: Record<string, unknown> | null
   extraccion_confianza: number | null
   extraccion_fecha: string | null
 
@@ -84,8 +84,8 @@ export interface Documento {
 export interface HistorialEstado {
   id: string
   empresa_id: string
-  estado_anterior: string | null
-  estado_nuevo: string
+  estado_anterior: EstadoEmpresa | null
+  estado_nuevo: EstadoEmpresa
   cambiado_por: string | null
   motivo: string | null
   created_at: string
