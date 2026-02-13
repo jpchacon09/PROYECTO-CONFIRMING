@@ -1,8 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, Suspense } from 'react'
 
@@ -68,9 +69,11 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-foreground">Back Office Confirming</CardTitle>
-          <CardDescription>Ingresa con tu cuenta de administrador</CardDescription>
+        <CardHeader className="text-center space-y-4">
+          <div className="flex justify-center">
+            <Image src="/logo.png" alt="Confirming" width={160} height={40} priority />
+          </div>
+          <CardDescription>Panel de Administración</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error === 'unauthorized' && (

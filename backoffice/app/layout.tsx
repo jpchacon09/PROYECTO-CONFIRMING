@@ -5,8 +5,11 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Back Office - Confirming Platam',
+  title: 'Confirming - Back Office',
   description: 'Panel de administración para el onboarding de empresas pagadoras',
+  icons: {
+    icon: '/logo.png',
+  },
 }
 
 export default function RootLayout({

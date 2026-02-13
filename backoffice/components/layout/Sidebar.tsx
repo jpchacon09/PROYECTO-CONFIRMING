@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
@@ -34,8 +35,8 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-card border-r border-border">
       {/* Logo */}
-      <div className="flex h-16 items-center justify-center border-b border-border px-4">
-        <h1 className="text-xl font-bold text-primary">Confirming Platam</h1>
+      <div className="flex h-16 items-center border-b border-border px-5">
+        <Image src="/logo.png" alt="Confirming" width={130} height={32} />
       </div>
 
       {/* Navigation */}

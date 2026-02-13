@@ -10,7 +10,7 @@ import type { EmpresaPagadora, Documento, HistorialEstado } from '@/lib/types'
 import { ESTADO_LABELS, ESTADO_COLORS, ESTADO_DESCRIPTIONS } from '@/constants/estados'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Loader2, Building2, FileText, History, LogOut } from 'lucide-react'
+import { Loader2, FileText, History, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/errors'
 
@@ -95,10 +95,7 @@ export function Dashboard() {
       <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-primary" />
-            </div>
-            <h1 className="text-lg font-semibold text-foreground">Portal de Confirming</h1>
+            <img src="/logo.png" alt="Confirming" className="h-8" />
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>

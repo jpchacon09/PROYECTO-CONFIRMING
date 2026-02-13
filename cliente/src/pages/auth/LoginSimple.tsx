@@ -129,22 +129,22 @@ export function LoginSimple() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        <div className="text-center space-y-3">
-          <motion.h1
-            className="text-4xl md:text-5xl font-bold tracking-tight text-foreground"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+        <div className="text-center space-y-5">
+          <motion.img
+            src="/logo.png"
+            alt="Confirming"
+            className="h-12 mx-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-          >
-            Bienvenido
-          </motion.h1>
+          />
           <motion.p
             className="text-lg text-muted-foreground"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
-            Plataforma de Confirming
+            Plataforma de Onboarding
           </motion.p>
         </div>
 
