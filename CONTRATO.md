@@ -329,9 +329,9 @@ Todos los endpoints requieren autenticación via header `Authorization: Bearer <
 {
   "success": true,
   "data": {
-    "presigned_url": "https://s3.amazonaws.com/confirming-documentos-prod/...",
-    "s3_bucket": "confirming-documentos-prod",
-    "s3_key": "pagadores/900123456-7/rut/20260212_a3f2b1c4_rut.pdf",
+    "presigned_url": "https://s3.amazonaws.com/n8nagentrobust/...",
+    "s3_bucket": "n8nagentrobust",
+    "s3_key": "CONFIRMING/pagadores/900123456-7/rut/20260212_a3f2b1c4_rut.pdf",
     "documento_id": "uuid-del-registro-creado",
     "expires_in": 900
   }
@@ -379,7 +379,7 @@ Todos los endpoints requieren autenticación via header `Authorization: Bearer <
 {
   "success": true,
   "data": {
-    "presigned_url": "https://s3.amazonaws.com/confirming-documentos-prod/...?expires=...",
+    "presigned_url": "https://s3.amazonaws.com/n8nagentrobust/...?expires=...",
     "expires_in": 900,
     "mime_type": "application/pdf",
     "nombre_original": "rut_empresa.pdf"
@@ -607,9 +607,9 @@ Todos los endpoints requieren autenticación via header `Authorization: Bearer <
 **Response (200 OK):**
 ```json
 {
-  "presigned_url": "https://s3.amazonaws.com/confirming-documentos-prod/pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut_empresa.pdf?X-Amz-Algorithm=...",
-  "s3_bucket": "confirming-documentos-prod",
-  "s3_key": "pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut_empresa.pdf",
+  "presigned_url": "https://s3.amazonaws.com/n8nagentrobust/CONFIRMING/pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut_empresa.pdf?X-Amz-Algorithm=...",
+  "s3_bucket": "n8nagentrobust",
+  "s3_key": "CONFIRMING/pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut_empresa.pdf",
   "documento_id": "uuid-del-documento-creado"
 }
 ```
@@ -650,7 +650,7 @@ Todos los endpoints requieren autenticación via header `Authorization: Bearer <
 **Response (200 OK):**
 ```json
 {
-  "presigned_url": "https://s3.amazonaws.com/confirming-documentos-prod/...?expires=...",
+  "presigned_url": "https://s3.amazonaws.com/n8nagentrobust/...?expires=...",
   "expires_in": 900,
   "mime_type": "application/pdf"
 }
@@ -675,16 +675,16 @@ Todos los endpoints requieren autenticación via header `Authorization: Bearer <
 
 ### 6.1 Bucket Principal
 
-**Nombre:** `bucketn8n-platam`
-**Prefix:** `confirming/`
+**Nombre:** `n8nagentrobust`
+**Prefix:** `CONFIRMING/`
 **Region:** `us-east-1`
 **Acceso público:** **BLOQUEADO** (solo via presigned URLs)
 
 ### 6.2 Estructura de Carpetas
 
 ```
-bucketn8n-platam/
-└── confirming/
+n8nagentrobust/
+└── CONFIRMING/
     │
     ├── pagadores/
 │   └── {nit}/                                    # Ej: 900123456-7
@@ -730,7 +730,7 @@ bucketn8n-platam/
 **Ejemplo:**
 ```
 Original: "RUT Empresa XYZ S.A.S. (copia 2024).pdf"
-S3 Key:   "pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut_empresa_xyz_sas_copia_2024.pdf"
+S3 Key:   "CONFIRMING/pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut_empresa_xyz_sas_copia_2024.pdf"
 ```
 
 **Función de sanitización:**
@@ -841,17 +841,17 @@ n8n hace polling cada 30 segundos y procesa las notificaciones pendientes.
 {
   "evento": "documento_subido",
   "timestamp": "2026-02-12T15:35:12.456Z",
-  "documento": {
-    "id": "uuid-documento",
-    "tipo_documento": "rut",
-    "empresa_id": "uuid-empresa",
-    "nit_empresa": "900123456-7",
-    "s3_bucket": "confirming-documentos-prod",
-    "s3_key": "pagadores/900123456-7/rut/20260212_153512_a3f2b1c4_rut.pdf",
-    "mime_type": "application/pdf",
-    "tamano_bytes": 245678
+    "documento": {
+      "id": "uuid-documento",
+      "tipo_documento": "rut",
+      "empresa_id": "uuid-empresa",
+      "nit_empresa": "900123456-7",
+      "s3_bucket": "n8nagentrobust",
+      "s3_key": "CONFIRMING/pagadores/900123456-7/rut/20260212_153512_a3f2b1c4_rut.pdf",
+      "mime_type": "application/pdf",
+      "tamano_bytes": 245678
+    }
   }
-}
 ```
 
 **Acciones de n8n:**
@@ -888,8 +888,8 @@ n8n hace polling cada 30 segundos y procesa las notificaciones pendientes.
 
 ### 8.4 S3
 
-- **Buckets:** kebab-case (ej: `confirming-documentos-prod`)
-- **Keys:** snake_case con `/` para carpetas (ej: `pagadores/900123456-7/rut/20260212_a3f2b1c4_rut.pdf`)
+- **Buckets:** kebab-case (ej: `n8nagentrobust`)
+- **Keys:** snake_case con `/` para carpetas (ej: `CONFIRMING/pagadores/900123456-7/rut/20260212_a3f2b1c4_rut.pdf`)
 
 ---
 

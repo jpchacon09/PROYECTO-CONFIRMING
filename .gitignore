@@ -7,6 +7,11 @@ Credenciales.txt
 # Dependencies
 **/node_modules/
 
+# Build artifacts
+**/dist/
+**/.next/
+**/.turbo/
+
 # Tooling/temp
 supabase/.temp/
 

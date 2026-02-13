@@ -15,7 +15,7 @@
             "s3:PutObjectAcl"
           ],
           "Resource": [
-            "arn:aws:s3:::confirming-documentos-prod/*"
+            "arn:aws:s3:::n8nagentrobust/CONFIRMING/*"
           ]
         },
         {
@@ -25,7 +25,7 @@
             "s3:ListBucket"
           ],
           "Resource": [
-            "arn:aws:s3:::confirming-documentos-prod"
+            "arn:aws:s3:::n8nagentrobust"
           ]
         }
       ]
@@ -42,7 +42,7 @@
             "s3:GetObject"
           ],
           "Resource": [
-            "arn:aws:s3:::confirming-documentos-prod/*"
+            "arn:aws:s3:::n8nagentrobust/CONFIRMING/*"
           ]
         },
         {
@@ -231,7 +231,7 @@
       "tests": [
         {
           "test": "Test presigned URL generation",
-          "command": "aws s3 presign s3://confirming-documentos-prod/test.txt --expires-in 900",
+          "command": "aws s3 presign s3://n8nagentrobust/CONFIRMING/test.txt --expires-in 900",
           "expected": "URL con firma válida por 15 minutos"
         },
         {
@@ -239,7 +239,7 @@
           "steps": [
             "1. Generar presigned URL de PUT",
             "2. Ejecutar: curl -X PUT --upload-file test.pdf '<presigned-url>'",
-            "3. Verificar: aws s3 ls s3://confirming-documentos-prod/test.pdf"
+            "3. Verificar: aws s3 ls s3://n8nagentrobust/CONFIRMING/test.pdf"
           ]
         }
       ]

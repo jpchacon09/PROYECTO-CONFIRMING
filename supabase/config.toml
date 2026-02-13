@@ -3,10 +3,10 @@
 # ============================================================================
 
 [functions.generar-url-subida]
-verify_jwt = true
+verify_jwt = false
 
 [functions.obtener-url-documento]
-verify_jwt = true
+verify_jwt = false
 
 # Variables de entorno (configurar en Supabase Dashboard)
 # ============================================================================

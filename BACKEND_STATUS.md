@@ -73,8 +73,8 @@ Notas (2026-02-13):
         "s3:DeleteObject"
       ],
       "Resource": [
-        "arn:aws:s3:::bucketn8n-platam",
-        "arn:aws:s3:::bucketn8n-platam/*"
+        "arn:aws:s3:::n8nagentrobust",
+        "arn:aws:s3:::n8nagentrobust/CONFIRMING/*"
       ]
     }
   ]
@@ -163,7 +163,7 @@ curl http://localhost:3001/api/health
 - ✅ Access Key ID: `Configurada (oculta por seguridad)`
 - ✅ Secret Access Key: Configurada
 - ✅ Region: `us-east-1`
-- ✅ Bucket: `bucketn8n-platam`
+- ✅ Bucket: `n8nagentrobust`
 
 ### Supabase CLI:
 - ✅ Access Token: Configurado

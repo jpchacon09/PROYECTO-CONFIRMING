@@ -149,7 +149,7 @@ backoffice/
 - Access Key ID: ✅ Configurada
 - Secret Access Key: ✅ Configurada
 - Region: `us-east-1`
-- Bucket: `bucketn8n-platam`
+- Bucket: `n8nagentrobust`
 
 ---
 

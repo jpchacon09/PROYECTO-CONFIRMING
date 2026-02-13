@@ -161,16 +161,28 @@ export function Documentos() {
       }
 
       // 2. Subir a S3 usando presigned URL
-      const uploadResponse = await fetch(data.presigned_url, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      })
+      let uploadResponse: Response
+      try {
+        uploadResponse = await fetch(data.presigned_url, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+            // Algunos buckets tienen policy que exige SSE-S3 (AES256).
+            // Este header dispara preflight, asi que S3 CORS debe permitirlo.
+            'x-amz-server-side-encryption': 'AES256',
+          },
+        })
+      } catch (e) {
+        const msg = getErrorMessage(e, 'error desconocido')
+        // En navegadores, fallos de CORS contra S3 suelen verse como "Failed to fetch"/ERR_FAILED.
+        toast.error(`Error al subir a S3 (posible CORS): ${msg}`)
+        return
+      }
 
       if (!uploadResponse.ok) {
-        toast.error('Error al subir el archivo a S3')
+        const details = await uploadResponse.text().catch(() => '')
+        toast.error(`Error al subir el archivo a S3 (HTTP ${uploadResponse.status})${details ? `: ${details}` : ''}`)
         return
       }
 

@@ -165,8 +165,8 @@ backoffice/
   - `usuarios`
 
 ### AWS S3
-- **Bucket:** `bucketn8n-platam`
-- **Prefix:** `confirming/`
+- **Bucket:** `n8nagentrobust`
+- **Prefix:** `CONFIRMING/`
 - **Presigned URLs:** ✅ Funcionando via Edge Functions
 
 ### Edge Functions

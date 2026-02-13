@@ -140,7 +140,7 @@ Cambio sensible aplicado (backend Supabase Functions):
 
 - `supabase/functions/generar-url-subida/index.ts`: se eliminó `@aws-sdk/*` vía `esm.sh`, se implementó firma SigV4 nativa para URL presignada `PUT` y se mantuvo validación de JWT/autorización por empresa.
 - `supabase/functions/obtener-url-documento/index.ts`: se eliminó `@aws-sdk/*` vía `esm.sh` y se implementó firma SigV4 nativa para URL presignada `GET`.
-- `supabase/config.toml`: `verify_jwt = true` en ambas funciones (`generar-url-subida` y `obtener-url-documento`).
+- `supabase/config.toml`: `verify_jwt = false` en ambas funciones y verificación fuerte se hace dentro de la función consultando `GET /auth/v1/user` con el token (evita 401 del gateway y evita JWTs falsificados).
 
 Motivo técnico:
 

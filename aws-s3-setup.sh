@@ -10,9 +10,9 @@
 set -e  # Exit on error
 
 # Configuración
-BUCKET_NAME="confirming"
+# Bucket definitivo para documentos del proyecto.
+BUCKET_NAME="n8nagentrobust"
 REGION="us-east-1"
-AWS_ACCOUNT_ID="TU-ACCOUNT-ID"  # CAMBIAR POR TU ACCOUNT ID
 
 echo "========================================="
 echo "AWS S3 Setup - Plataforma Confirming"
@@ -107,18 +107,6 @@ cat > /tmp/bucket-policy.json <<EOF
           "s3:x-amz-server-side-encryption": "AES256"
         }
       }
-    },
-    {
-      "Sid": "AllowPresignedURLs",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ConfirmingEdgeFunctionRole"
-      },
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject"
-      ],
-      "Resource": "arn:aws:s3:::${BUCKET_NAME}/*"
     }
   ]
 }
@@ -142,11 +130,11 @@ cat > /tmp/cors-config.json <<EOF
       "AllowedMethods": ["GET", "PUT", "HEAD"],
       "AllowedOrigins": [
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "http://localhost:3000",
-        "https://tudominio.com",
-        "https://*.supabase.co"
+        "https://tudominio.com"
       ],
-      "ExposeHeaders": ["ETag"],
+      "ExposeHeaders": ["ETag", "x-amz-request-id", "x-amz-id-2"],
       "MaxAgeSeconds": 3000
     }
   ]
@@ -170,7 +158,7 @@ cat > /tmp/lifecycle-policy.json <<EOF
       "Id": "TransitionToIA",
       "Status": "Enabled",
       "Filter": {
-        "Prefix": "pagadores/"
+        "Prefix": "CONFIRMING/pagadores/"
       },
       "Transitions": [
         {
@@ -187,7 +175,7 @@ cat > /tmp/lifecycle-policy.json <<EOF
       "Id": "DeleteTempFiles",
       "Status": "Enabled",
       "Filter": {
-        "Prefix": "temp/"
+        "Prefix": "CONFIRMING/temp/"
       },
       "Expiration": {
         "Days": 1

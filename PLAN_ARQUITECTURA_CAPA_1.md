@@ -645,11 +645,11 @@ CREATE POLICY "Pagadores ven sus convenios"
 ### 3.1 Bucket principal
 
 ```
-Bucket: confirming-documentos-prod
+Bucket: n8nagentrobust
 Region: us-east-1 (o la región GCP más cercana si usas Interoperability)
 
 Estructura:
-confirming-documentos-prod/
+n8nagentrobust/
 ├── pagadores/
 │   └── {nit}/                          # Ej: 900123456-7
 │       ├── camara_comercio/
@@ -713,7 +713,7 @@ S3 Key:   "20260212_153045_a3f2b1c4_rut_empresa_xyz_sas_copia_2024.pdf"
       "Effect": "Deny",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::confirming-documentos-prod/*",
+      "Resource": "arn:aws:s3:::n8nagentrobust/CONFIRMING/*",
       "Condition": {
         "StringNotEquals": {
           "aws:PrincipalArn": [
@@ -733,7 +733,7 @@ S3 Key:   "20260212_153045_a3f2b1c4_rut_empresa_xyz_sas_copia_2024.pdf"
         "s3:GetObject",
         "s3:PutObject"
       ],
-      "Resource": "arn:aws:s3:::confirming-documentos-prod/*"
+      "Resource": "arn:aws:s3:::n8nagentrobust/CONFIRMING/*"
     },
     {
       "Sid": "AllowDocumentAIRead",
@@ -742,7 +742,7 @@ S3 Key:   "20260212_153045_a3f2b1c4_rut_empresa_xyz_sas_copia_2024.pdf"
         "AWS": "arn:aws:iam::ACCOUNT-ID:role/ConfirmingDocumentAIRole"
       },
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::confirming-documentos-prod/*"
+      "Resource": "arn:aws:s3:::n8nagentrobust/CONFIRMING/*"
     }
   ]
 }
@@ -929,7 +929,7 @@ const { data: uploadData, error } = await supabase.functions.invoke(
 // uploadData contiene:
 // {
 //   presigned_url: "https://s3.amazonaws.com/...",
-//   s3_bucket: "confirming-documentos-prod",
+//   s3_bucket: "n8nagentrobust",
 //   s3_key: "pagadores/900123456-7/rut/20260212_a3f2b1c4_rut_empresa.pdf",
 //   documento_id: "uuid-del-registro-creado"
 // }
@@ -1117,7 +1117,7 @@ Supabase Trigger → HTTP POST a n8n webhook directamente
     "tipo_documento": "rut",
     "empresa_id": "uuid-empresa",
     "nit_empresa": "900123456-7",
-    "s3_bucket": "confirming-documentos-prod",
+    "s3_bucket": "n8nagentrobust",
     "s3_key": "pagadores/900123456-7/rut/20260212_153512_a3f2b1c4_rut.pdf",
     "mime_type": "application/pdf",
     "tamano_bytes": 245678
@@ -1429,7 +1429,7 @@ confirming-backoffice/
 
 **Día 1-2:**
 - [ ] Configurar AWS S3:
-  - Crear bucket `confirming-documentos-prod`
+  - Crear bucket `n8nagentrobust`
   - Configurar políticas de acceso
   - Implementar función `generatePresignedUrl` en `lib/aws/s3.ts`
 
@@ -1527,7 +1527,7 @@ GOOGLE_CLOUD_PROJECT_ID=tu-proyecto-gcp
 GOOGLE_APPLICATION_CREDENTIALS=/var/task/credentials.json  # Montado en Lambda
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_KEY=eyJxxx...  # Service role key (secret)
-AWS_S3_BUCKET=confirming-documentos-prod
+AWS_S3_BUCKET=n8nagentrobust
 ```
 
 **Código (pseudocódigo):**
@@ -1755,7 +1755,7 @@ serve(async (req) => {
     .insert({
       empresa_id,
       tipo_documento,
-      s3_bucket: 'confirming-documentos-prod',
+      s3_bucket: 'n8nagentrobust',
       s3_key,
       nombre_original: nombre_archivo,
       mime_type,
@@ -1776,7 +1776,7 @@ serve(async (req) => {
   })
 
   const command = new PutObjectCommand({
-    Bucket: 'confirming-documentos-prod',
+    Bucket: 'n8nagentrobust',
     Key: s3_key,
     ContentType: mime_type
   })
@@ -1786,7 +1786,7 @@ serve(async (req) => {
   return new Response(
     JSON.stringify({
       presigned_url,
-      s3_bucket: 'confirming-documentos-prod',
+      s3_bucket: 'n8nagentrobust',
       s3_key,
       documento_id: documento.id
     }),
@@ -1887,7 +1887,7 @@ SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY> # SECRETO, solo server
 AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
 AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
 AWS_REGION=us-east-1
-AWS_S3_BUCKET=bucketn8n-platam
+AWS_S3_BUCKET=n8nagentrobust
 AWS_SES_FROM_EMAIL=noreply@tudominio.com
 ```
 
@@ -1921,7 +1921,7 @@ NEXT_PUBLIC_APP_URL=https://backoffice.tudominio.com
 SUPABASE_SERVICE_KEY=<SUPABASE_SERVICE_ROLE_KEY>
 AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
 AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
-AWS_S3_BUCKET=bucketn8n-platam
+AWS_S3_BUCKET=n8nagentrobust
 ```
 
 ---

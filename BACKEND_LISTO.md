@@ -25,12 +25,12 @@ POST https://TU_PROYECTO.supabase.co/functions/v1/obtener-url-documento
 ```
 
 ### 3. AWS S3 ✅
-- **Bucket:** `bucketn8n-platam`
-- **Prefix:** `confirming/`
+- **Bucket:** `n8nagentrobust`
+- **Prefix:** `CONFIRMING/`
 - **Estructura creada:**
-  - `confirming/pagadores/`
-  - `confirming/proveedores/`
-  - `confirming/facturas/`
+  - `CONFIRMING/pagadores/`
+  - `CONFIRMING/proveedores/`
+  - `CONFIRMING/facturas/`
 - **Permisos:** ✅ Escritura y lectura verificadas
 
 ### 4. Backend Next.js ✅
@@ -57,17 +57,17 @@ SUPABASE_SERVICE_KEY=<TU_SUPABASE_SERVICE_KEY>
 
 # AWS S3
 AWS_ACCESS_KEY_ID=<TU_AWS_ACCESS_KEY_ID>
-AWS_SECRET_ACCESS_KEY=<TU_AWS_SECRET_ACCESS_KEY>
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=bucketn8n-platam
+	AWS_SECRET_ACCESS_KEY=<TU_AWS_SECRET_ACCESS_KEY>
+	AWS_REGION=us-east-1
+	AWS_S3_BUCKET=n8nagentrobust
 ```
 
 ### Estructura de S3
 ```
-s3://bucketn8n-platam/confirming/pagadores/{nit}/{tipo_documento}/{archivo}
+s3://n8nagentrobust/CONFIRMING/pagadores/{nit}/{tipo_documento}/{archivo}
 
 Ejemplo:
-s3://bucketn8n-platam/confirming/pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut.pdf
+s3://n8nagentrobust/CONFIRMING/pagadores/900123456-7/rut/20260212_153045_a3f2b1c4_rut.pdf
 ```
 
 ---
@@ -99,7 +99,7 @@ curl http://localhost:3001/api/health
 
 ### Test 2: Verificar S3
 ```bash
-aws s3 ls s3://bucketn8n-platam/confirming/
+aws s3 ls s3://n8nagentrobust/CONFIRMING/
 ```
 
 **Respuesta esperada:**
@@ -245,7 +245,7 @@ Si algo falla:
    - Verificar secrets: `supabase secrets list`
 
 2. **Presigned URLs fallan:**
-   - Verificar permisos S3: `aws s3 ls s3://bucketn8n-platam/confirming/`
+   - Verificar permisos S3: `aws s3 ls s3://n8nagentrobust/CONFIRMING/`
    - Verificar credenciales en Edge Functions secrets
 
 3. **Backend no inicia:**

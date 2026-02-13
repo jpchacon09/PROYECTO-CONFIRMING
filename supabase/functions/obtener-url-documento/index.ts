@@ -51,14 +51,23 @@ interface DocumentoConEmpresa {
 
 const textEncoder = new TextEncoder()
 
-function decodeJwtPayload(token: string): { sub?: string; exp?: number } | null {
+async function getUserIdFromToken(
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+  token: string
+): Promise<string | null> {
   try {
-    const parts = token.split('.')
-    if (parts.length !== 3) return null
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
-    const json = atob(padded)
-    return JSON.parse(json)
+    const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey
+      }
+    })
+
+    if (!resp.ok) return null
+    const user = await resp.json().catch(() => null)
+    return typeof user?.id === 'string' ? user.id : null
   } catch {
     return null
   }
@@ -238,9 +247,10 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
       return errorResponse('CONFIG_ERROR', 'Faltan variables de entorno de Supabase en la función')
     }
 
@@ -249,11 +259,9 @@ serve(async (req) => {
       return errorResponse('UNAUTHENTICATED', 'Token de autenticación inválido')
     }
 
-    const payload = decodeJwtPayload(token)
-    if (!payload?.sub) {
-      return errorResponse('UNAUTHENTICATED', 'Token inválido o expirado')
-    }
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+    // verify_jwt=false en gateway: verificamos el token contra GoTrue para evitar JWTs falsificados
+    const userId = await getUserIdFromToken(supabaseUrl, supabaseAnonKey, token)
+    if (!userId) {
       return errorResponse('UNAUTHENTICATED', 'Token inválido o expirado')
     }
 
@@ -263,7 +271,6 @@ serve(async (req) => {
       supabaseUrl,
       serviceRoleKey
     )
-    const userId = payload.sub
 
     // ========================================================================
     // 2. Parsear y validar request body

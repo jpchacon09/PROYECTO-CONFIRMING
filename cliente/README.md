@@ -60,8 +60,8 @@ npm run dev
 - **generar-url-subida:** Genera presigned URLs para S3
 
 ### AWS S3
-- **Bucket:** `bucketn8n-platam`
-- **Path:** `confirming/pagadores/{NIT}/{tipo_documento}/`
+- **Bucket:** `n8nagentrobust`
+- **Path:** `CONFIRMING/pagadores/{NIT}/{tipo_documento}/`
 
 ---
 

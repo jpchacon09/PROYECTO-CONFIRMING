@@ -56,7 +56,8 @@ type TipoDocumento =
 // Constantes
 // ============================================================================
 
-const S3_BUCKET = 'bucketn8n-platam'
+// Bucket definitivo para documentos (segun decisión del proyecto).
+const S3_BUCKET = 'n8nagentrobust'
 const S3_REGION = 'us-east-1'
 const PRESIGNED_URL_EXPIRATION = 900 // 15 minutos en segundos
 const MAX_FILE_SIZE = 10485760 // 10 MB en bytes
@@ -97,14 +98,23 @@ function sanitizeFilename(filename: string): string {
     .substring(0, 50) // Max 50 chars
 }
 
-function decodeJwtPayload(token: string): { sub?: string; exp?: number } | null {
+async function getUserIdFromToken(
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+  token: string
+): Promise<string | null> {
   try {
-    const parts = token.split('.')
-    if (parts.length !== 3) return null
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
-    const json = atob(padded)
-    return JSON.parse(json)
+    const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey
+      }
+    })
+
+    if (!resp.ok) return null
+    const user = await resp.json().catch(() => null)
+    return typeof user?.id === 'string' ? user.id : null
   } catch {
     return null
   }
@@ -182,28 +192,40 @@ async function createPresignedS3PutUrl(
   region: string,
   accessKeyId: string,
   secretAccessKey: string,
-  expiresIn: number
+  expiresIn: number,
+  serverSideEncryption: 'AES256' | null
 ): Promise<string> {
   const host = `${bucket}.s3.${region}.amazonaws.com`
   const canonicalUri = `/${encodeS3Path(key)}`
   const { amzDate, dateStamp } = amzDates(new Date())
   const credentialScope = `${dateStamp}/${region}/s3/aws4_request`
 
+  // For presigned URLs: any x-amz-* header present in the actual request must be signed.
+  // The frontend sends `x-amz-server-side-encryption: AES256`, so we must sign it.
+  const signedHeaderNames = serverSideEncryption
+    ? 'host;x-amz-server-side-encryption'
+    : 'host'
+
   const query: Record<string, string> = {
     'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
     'X-Amz-Credential': `${accessKeyId}/${credentialScope}`,
     'X-Amz-Date': amzDate,
     'X-Amz-Expires': String(expiresIn),
-    'X-Amz-SignedHeaders': 'host'
+    'X-Amz-SignedHeaders': signedHeaderNames
   }
 
   const canonicalQuery = buildCanonicalQuery(query)
+
+  const canonicalHeaders = serverSideEncryption
+    ? `host:${host}\nx-amz-server-side-encryption:${serverSideEncryption}\n`
+    : `host:${host}\n`
+
   const canonicalRequest = [
     'PUT',
     canonicalUri,
     canonicalQuery,
-    `host:${host}\n`,
-    'host',
+    canonicalHeaders,
+    signedHeaderNames,
     'UNSIGNED-PAYLOAD'
   ].join('\n')
 
@@ -223,7 +245,7 @@ async function createPresignedS3PutUrl(
 
 /**
  * Genera S3 key con formato estándar
- * Formato: pagadores/{nit}/{tipo_documento}/{timestamp}_{uuid}_{nombre}.{ext}
+ * Formato: CONFIRMING/pagadores/{nit}/{tipo_documento}/{timestamp}_{uuid}_{nombre}.{ext}
  */
 function generateS3Key(
   nit: string,
@@ -239,7 +261,8 @@ function generateS3Key(
   const nombreSanitizado = sanitizeFilename(nombreArchivo)
   const extension = nombreArchivo.split('.').pop()?.toLowerCase() || 'pdf'
 
-  return `confirming/pagadores/${nit}/${tipoDocumento}/${timestamp}_${uuid}_${nombreSanitizado}.${extension}`
+  // Nota: S3 es case-sensitive. El bucket ya tiene carpeta/prefijo "CONFIRMING/".
+  return `CONFIRMING/pagadores/${nit}/${tipoDocumento}/${timestamp}_${uuid}_${nombreSanitizado}.${extension}`
 }
 
 /**
@@ -294,9 +317,10 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
       return errorResponse('CONFIG_ERROR', 'Faltan variables de entorno de Supabase en la función')
     }
 
@@ -305,11 +329,9 @@ serve(async (req) => {
       return errorResponse('UNAUTHENTICATED', 'Token de autenticación inválido')
     }
 
-    const payload = decodeJwtPayload(token)
-    if (!payload?.sub) {
-      return errorResponse('UNAUTHENTICATED', 'Token inválido o expirado')
-    }
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+    // verify_jwt=false en gateway: verificamos el token contra GoTrue para evitar JWTs falsificados
+    const userId = await getUserIdFromToken(supabaseUrl, supabaseAnonKey, token)
+    if (!userId) {
       return errorResponse('UNAUTHENTICATED', 'Token inválido o expirado')
     }
 
@@ -319,7 +341,6 @@ serve(async (req) => {
       supabaseUrl,
       serviceRoleKey
     )
-    const userId = payload.sub
 
     // ========================================================================
     // 2. Parsear y validar request body
@@ -400,7 +421,8 @@ serve(async (req) => {
         S3_REGION,
         awsAccessKeyId,
         awsSecretAccessKey,
-        PRESIGNED_URL_EXPIRATION
+        PRESIGNED_URL_EXPIRATION,
+        'AES256'
       )
     } catch (s3Error) {
       console.error('Error al generar presigned URL:', s3Error)
